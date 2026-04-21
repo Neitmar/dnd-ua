@@ -1,7 +1,6 @@
-import 'dart:async';
-import '../models/character_model.dart';
-import '../services/storage_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
 
 class CharacterScreen extends StatefulWidget {
   const CharacterScreen({super.key});
@@ -11,82 +10,43 @@ class CharacterScreen extends StatefulWidget {
 }
 
 class _CharacterScreenState extends State<CharacterScreen> {
-  final _nameController = TextEditingController(text: 'Новий герой');
-  String _selectedClass = 'Воїн';
-  String _selectedRace = 'Людина';
-  int _level = 1;
+  late TextEditingController _nameController;
+  final _hpInputController = TextEditingController();
 
-  final Map<String, int> _stats = {
-    'Сила': 10,
-    'Спритність': 10,
-    'Статура': 10,
-    'Інтелект': 10,
-    'Мудрість': 10,
-    'Харизма': 10,
-  };
+  final List<String> _classes = [
+    'Воїн', 'Маг', 'Жрець', 'Розбійник',
+    'Варвар', 'Бард', 'Паладін', 'Друїд',
+    'Монах', 'Слідопит', 'Чаклун', 'Чародій',
+  ];
 
-  // Бонус майстерності залежно від рівня
-  int get _proficiencyBonus {
-    if (_level < 5) return 2;
-    if (_level < 9) return 3;
-    if (_level < 13) return 4;
-    if (_level < 17) return 5;
-    return 6;
-  }
+  final List<String> _races = [
+    'Людина', 'Ельф', 'Дварф', 'Напіврослик',
+    'Гном', 'Тифлінг', 'Драконороджений', 'Напівельф',
+  ];
 
-  int get _maxProficiencies {
-    switch (_selectedClass) {
-      case 'Розбійник':
-        return 4;
-      case 'Бард':
-        return 3;
-      case 'Слідопит':
-        return 3;
-      default:
-        return 2;
-    }
-  }
+  final List<String> _maleNames = [
+    'Аларік', 'Боррін', 'Кассіан', 'Дарен', 'Ельдар',
+    'Фаррел', 'Горан', 'Гавін', 'Ідріс', 'Джорен',
+    'Кален', 'Леон', 'Міррен', 'Нарін', 'Орін',
+    'Перін', 'Квінн', 'Рован', 'Сторм', 'Торін',
+    'Ульрік', 'Вален', 'Врін', 'Ксандер', 'Єрін', 'Зефір',
+  ];
 
-  bool get _hasExpertise {
-    return _selectedClass == 'Розбійник' || _selectedClass == 'Бард';
-  }
+  final List<String> _femaleNames = [
+    'Аріна', 'Бріела', 'Кассіра', 'Дара', 'Елара',
+    'Фаєна', 'Горіла', 'Гелена', 'Іара', 'Джорін',
+    'Кіра', 'Ліана', 'Міра', 'Нара', 'Оріна',
+    'Перла', 'Квінна', 'Ровена', 'Сільва', 'Таліна',
+    'Ульра', 'Валена', 'Врія', 'Ксара', 'Єрія', 'Зара',
+  ];
 
-  int get _maxExpertise {
-    return _hasExpertise ? 2 : 0;
-  }
+  final List<String> _lastNames = [
+    'Буревій', 'Залізний', 'Кам\'яний', 'Темний', 'Світлий',
+    'Золотий', 'Срібний', 'Вогняний', 'Крижаний', 'Лісовий',
+    'Морський', 'Гірський', 'Степовий', 'Нічний', 'Денний',
+    'Швидкий', 'Тихий', 'Гучний', 'Мудрий', 'Сміливий',
+  ];
 
-  Set<String> get _classDefaultSaves {
-    switch (_selectedClass) {
-      case 'Воїн':
-        return {'save_Сила', 'save_Статура'};
-      case 'Маг':
-        return {'save_Інтелект', 'save_Мудрість'};
-      case 'Жрець':
-        return {'save_Мудрість', 'save_Харизма'};
-      case 'Розбійник':
-        return {'save_Спритність', 'save_Інтелект'};
-      case 'Варвар':
-        return {'save_Сила', 'save_Статура'};
-      case 'Бард':
-        return {'save_Спритність', 'save_Харизма'};
-      case 'Паладін':
-        return {'save_Мудрість', 'save_Харизма'};
-      case 'Друїд':
-        return {'save_Інтелект', 'save_Мудрість'};
-      case 'Монах':
-        return {'save_Сила', 'save_Спритність'};
-      case 'Слідопит':
-        return {'save_Сила', 'save_Спритність'};
-      case 'Чаклун':
-        return {'save_Мудрість', 'save_Харизма'};
-      case 'Чародій':
-        return {'save_Статура', 'save_Харизма'};
-      default:
-        return {};
-    }
-  }
-
-  // Навички: назва -> яка характеристика
   final Map<String, String> _skillAbility = {
     'Акробатика': 'Спритність',
     'Виживання': 'Мудрість',
@@ -108,134 +68,18 @@ class _CharacterScreenState extends State<CharacterScreen> {
     'Тварини': 'Мудрість',
   };
 
-  // Які навички має вміння (proficiency)
-  final Set<String> _proficientSkills = {};
+  @override
+  void initState() {
+    super.initState();
+    final state = context.read<AppState>();
+    _nameController = TextEditingController(text: state.name);
+  }
 
-  // Які навички мають подвійне вміння (expertise)
-  final Set<String> _expertiseSkills = {};
-  int _maxHp = 10;
-  int _currentHp = 10;
-  int _tempHp = 0;
-  final _hpInputController = TextEditingController();
-
-  int _deathSuccesses = 0;
-  int _deathFailures = 0;
-
-  final List<String> _classes = [
-    'Воїн',
-    'Маг',
-    'Жрець',
-    'Розбійник',
-    'Варвар',
-    'Бард',
-    'Паладін',
-    'Друїд',
-    'Монах',
-    'Слідопит',
-    'Чаклун',
-    'Чародій',
-  ];
-
-  final List<String> _races = [
-    'Людина',
-    'Ельф',
-    'Дварф',
-    'Напіврослик',
-    'Гном',
-    'Тифлінг',
-    'Драконороджений',
-    'Напівельф',
-  ];
-
-  final List<String> _maleNames = [
-    'Аларік',
-    'Боррін',
-    'Кассіан',
-    'Дарен',
-    'Ельдар',
-    'Фаррел',
-    'Горан',
-    'Гавін',
-    'Ідріс',
-    'Джорен',
-    'Кален',
-    'Леон',
-    'Міррен',
-    'Нарін',
-    'Орін',
-    'Перін',
-    'Квінн',
-    'Рован',
-    'Сторм',
-    'Торін',
-    'Ульрік',
-    'Вален',
-    'Врін',
-    'Ксандер',
-    'Єрін',
-    'Зефір',
-  ];
-
-  final List<String> _femaleNames = [
-    'Аріна',
-    'Бріела',
-    'Кассіра',
-    'Дара',
-    'Елара',
-    'Фаєна',
-    'Горіла',
-    'Гелена',
-    'Іара',
-    'Джорін',
-    'Кіра',
-    'Ліана',
-    'Міра',
-    'Нара',
-    'Оріна',
-    'Перла',
-    'Квінна',
-    'Ровена',
-    'Сільва',
-    'Таліна',
-    'Ульра',
-    'Валена',
-    'Врія',
-    'Ксара',
-    'Єрія',
-    'Зара',
-  ];
-
-  final List<String> _lastNames = [
-    'Буревій',
-    'Залізний',
-    'Кам\'яний',
-    'Темний',
-    'Світлий',
-    'Золотий',
-    'Срібний',
-    'Вогняний',
-    'Крижаний',
-    'Лісовий',
-    'Морський',
-    'Гірський',
-    'Степовий',
-    'Нічний',
-    'Денний',
-    'Швидкий',
-    'Тихий',
-    'Гучний',
-    'Мудрий',
-    'Сміливий',
-  ];
-
-  void _generateName() {
-    final random = DateTime.now().millisecondsSinceEpoch;
-    final allNames = [..._maleNames, ..._femaleNames];
-    final firstName = allNames[random % allNames.length];
-    final lastName = _lastNames[(random ~/ 7) % _lastNames.length];
-    setState(() {
-      _nameController.text = '$firstName $lastName';
-    });
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _hpInputController.dispose();
+    super.dispose();
   }
 
   int _modifier(int score) => ((score - 10) / 2).floor();
@@ -245,6 +89,55 @@ class _CharacterScreenState extends State<CharacterScreen> {
     return mod >= 0 ? '+$mod' : '$mod';
   }
 
+  int _proficiencyBonus(int level) {
+    if (level < 5) return 2;
+    if (level < 9) return 3;
+    if (level < 13) return 4;
+    if (level < 17) return 5;
+    return 6;
+  }
+
+  int _maxProficiencies(String cls) {
+    switch (cls) {
+      case 'Розбійник': return 4;
+      case 'Бард': return 3;
+      case 'Слідопит': return 3;
+      default: return 2;
+    }
+  }
+
+  bool _hasExpertise(String cls) =>
+      cls == 'Розбійник' || cls == 'Бард';
+
+  Set<String> _classDefaultSaves(String cls) {
+    switch (cls) {
+      case 'Воїн':      return {'save_Сила', 'save_Статура'};
+      case 'Маг':       return {'save_Інтелект', 'save_Мудрість'};
+      case 'Жрець':     return {'save_Мудрість', 'save_Харизма'};
+      case 'Розбійник': return {'save_Спритність', 'save_Інтелект'};
+      case 'Варвар':    return {'save_Сила', 'save_Статура'};
+      case 'Бард':      return {'save_Спритність', 'save_Харизма'};
+      case 'Паладін':   return {'save_Мудрість', 'save_Харизма'};
+      case 'Друїд':     return {'save_Інтелект', 'save_Мудрість'};
+      case 'Монах':     return {'save_Сила', 'save_Спритність'};
+      case 'Слідопит':  return {'save_Сила', 'save_Спритність'};
+      case 'Чаклун':    return {'save_Мудрість', 'save_Харизма'};
+      case 'Чародій':   return {'save_Статура', 'save_Харизма'};
+      default:          return {};
+    }
+  }
+
+  void _generateName(AppState state) {
+    final random = DateTime.now().millisecondsSinceEpoch;
+    final allNames = [..._maleNames, ..._femaleNames];
+    final firstName = allNames[random % allNames.length];
+    final lastName = _lastNames[(random ~/ 7) % _lastNames.length];
+    final newName = '$firstName $lastName';
+    _nameController.text = newName;
+    state.update(() => state.name = newName);
+  }
+
+  // --- Hold логіка ---
   int _holdToken = 0;
 
   void _beginHold(VoidCallback action) {
@@ -256,68 +149,13 @@ class _CharacterScreenState extends State<CharacterScreen> {
   void _scheduleRepeat(VoidCallback action, int token) {
     Future.delayed(const Duration(milliseconds: 150), () {
       if (_holdToken == token && mounted) {
-        setState(() => action());
+        action();
         _scheduleRepeat(action, token);
       }
     });
   }
 
-  void _endHold() {
-    _holdToken++;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCharacter();
-  }
-
-  void setState(VoidCallback fn) {
-    super.setState(fn);
-    _saveCharacter();
-  }
-
-  Future<void> _loadCharacter() async {
-    final character = await StorageService.loadCharacter();
-    print('LOAD: character = $character');
-    if (character != null) {
-      print('LOAD: name = ${character.name}');
-      setState(() {
-        _nameController.text = character.name;
-        _selectedClass = character.characterClass;
-        _selectedRace = character.race;
-        _level = character.level;
-        _stats.addAll(character.stats);
-        _maxHp = character.maxHp;
-        _currentHp = character.currentHp;
-        _tempHp = character.tempHp;
-        _deathSuccesses = character.deathSuccesses;
-        _deathFailures = character.deathFailures;
-        _proficientSkills.addAll(character.proficientSkills);
-        _expertiseSkills.addAll(character.expertiseSkills);
-      });
-    }
-  }
-
-  void _saveCharacter() {
-    print('SAVE: name = ${_nameController.text}');
-    StorageService.saveCharacter(
-      CharacterModel(
-        name: _nameController.text,
-        characterClass: _selectedClass,
-        race: _selectedRace,
-        level: _level,
-        stats: Map.from(_stats),
-        maxHp: _maxHp,
-        currentHp: _currentHp,
-        tempHp: _tempHp,
-        deathSuccesses: _deathSuccesses,
-        deathFailures: _deathFailures,
-        proficientSkills: Set.from(_proficientSkills),
-        expertiseSkills: Set.from(_expertiseSkills),
-      ),
-    );
-  }
+  void _endHold() => _holdToken++;
 
   Widget _holdButton({required IconData icon, required VoidCallback? onTap}) {
     if (onTap == null) {
@@ -331,7 +169,9 @@ class _CharacterScreenState extends State<CharacterScreen> {
       onLongPressStart: (_) {
         _holdToken++;
         final myToken = _holdToken;
-        _scheduleDynamic(onTap, myToken);
+        Future.delayed(const Duration(milliseconds: 150), () {
+          _repeatHold(onTap, myToken);
+        });
       },
       onLongPressEnd: (_) => _endHold(),
       child: Padding(
@@ -341,43 +181,44 @@ class _CharacterScreenState extends State<CharacterScreen> {
     );
   }
 
-  void _scheduleDynamic(VoidCallback action, int token) {
-    Future.delayed(const Duration(milliseconds: 150), () {
-      if (_holdToken == token && mounted) {
-        setState(action);
-        _scheduleDynamic(action, token);
-      }
-    });
+  void _repeatHold(VoidCallback action, int token) {
+    if (_holdToken == token && mounted) {
+      action();
+      Future.delayed(const Duration(milliseconds: 150), () {
+        _repeatHold(action, token);
+      });
+    }
   }
 
-  void _applyDamage() {
+  // --- HP ---
+  void _applyDamage(AppState state) {
     final value = int.tryParse(_hpInputController.text) ?? 0;
     if (value <= 0) return;
-    setState(() {
-      if (_tempHp > 0) {
-        final absorbed = value > _tempHp ? _tempHp : value;
-        _tempHp -= absorbed;
+    state.update(() {
+      if (state.tempHp > 0) {
+        final absorbed = value > state.tempHp ? state.tempHp : value;
+        state.tempHp -= absorbed;
         final remaining = value - absorbed;
-        _currentHp = (_currentHp - remaining).clamp(0, _maxHp);
+        state.currentHp = (state.currentHp - remaining).clamp(0, state.maxHp);
       } else {
-        _currentHp = (_currentHp - value).clamp(0, _maxHp);
+        state.currentHp = (state.currentHp - value).clamp(0, state.maxHp);
       }
     });
     _hpInputController.clear();
   }
 
-  void _applyHeal() {
+  void _applyHeal(AppState state) {
     final value = int.tryParse(_hpInputController.text) ?? 0;
     if (value <= 0) return;
-    setState(() {
-      _currentHp = (_currentHp + value).clamp(0, _maxHp);
+    state.update(() {
+      state.currentHp = (state.currentHp + value).clamp(0, state.maxHp);
     });
     _hpInputController.clear();
   }
 
-  Color get _hpColor {
-    if (_currentHp == 0) return Colors.red.shade700;
-    final ratio = _currentHp / _maxHp;
+  Color _hpColor(AppState state) {
+    if (state.currentHp == 0) return Colors.red.shade700;
+    final ratio = state.currentHp / state.maxHp;
     if (ratio <= 0.25) return Colors.red.shade400;
     if (ratio <= 0.5) return Colors.orange.shade400;
     return Colors.green.shade400;
@@ -385,210 +226,41 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Персонаж'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Персонаж'),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildBasicInfo(),
+            _buildBasicInfo(state),
             const SizedBox(height: 16),
-            _buildHpBlock(),
+            _buildHpBlock(state),
             const SizedBox(height: 16),
-            _buildStatsGrid(),
+            _buildStatsGrid(state),
             const SizedBox(height: 16),
-            _buildSavingThrows(),
+            _buildSavingThrows(state),
             const SizedBox(height: 16),
-            _buildSkills(),
+            _buildSkills(state),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSavingThrows() {
-    final abilities = _stats.keys.toList();
+  Widget _buildBasicInfo(AppState state) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Text(
-                  'Рятівні кидки',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Майстерність: +$_proficiencyBonus',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...abilities.map((ability) {
-              final isProficient = _classDefaultSaves.contains('save_$ability');
-              final mod = _modifier(_stats[ability]!);
-              final bonus = isProficient ? mod + _proficiencyBonus : mod;
-              final bonusStr = bonus >= 0 ? '+$bonus' : '$bonus';
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Icon(
-                      isProficient ? Icons.circle : Icons.circle_outlined,
-                      size: 14,
-                      color: isProficient
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 36,
-                      child: Text(
-                        bonusStr,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Text(ability, style: const TextStyle(fontSize: 14)),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSkills() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Навички',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            ..._skillAbility.entries.map((entry) {
-              final skillName = entry.key;
-              final abilityName = entry.value;
-              final isProficient = _proficientSkills.contains(skillName);
-              final isExpertise = _expertiseSkills.contains(skillName);
-              final mod = _modifier(_stats[abilityName]!);
-              int bonus = mod;
-              if (isExpertise) {
-                bonus = mod + _proficiencyBonus * 2;
-              } else if (isProficient) {
-                bonus = mod + _proficiencyBonus;
-              }
-              final bonusStr = bonus >= 0 ? '+$bonus' : '$bonus';
-              return InkWell(
-                onTap: () => setState(() {
-                  if (isExpertise) {
-                    // скидаємо подвійне вміння → звичайне
-                    _expertiseSkills.remove(skillName);
-                  } else if (isProficient) {
-                    // вміння → подвійне (тільки якщо клас дозволяє і ліміт не досягнутий)
-                    if (_hasExpertise &&
-                        _expertiseSkills.length < _maxExpertise) {
-                      _expertiseSkills.add(skillName);
-                    } else {
-                      // скидаємо вміння
-                      _proficientSkills.remove(skillName);
-                    }
-                  } else {
-                    // немає → вміння (якщо ліміт не досягнутий)
-                    if (_proficientSkills.length < _maxProficiencies) {
-                      _proficientSkills.add(skillName);
-                    }
-                  }
-                }),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isExpertise
-                            ? Icons.circle
-                            : isProficient
-                            ? Icons.circle_outlined
-                            : Icons.radio_button_unchecked,
-                        size: 14,
-                        color: isExpertise
-                            ? Colors.amber
-                            : isProficient
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey,
-                      ),
-                      const SizedBox(height: 0, width: 8),
-                      SizedBox(
-                        width: 36,
-                        child: Text(
-                          bonusStr,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          skillName,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                      Text(
-                        abilityName.substring(0, 3).toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBasicInfo() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Основне',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text('Основне',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
               controller: _nameController,
@@ -596,41 +268,38 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 labelText: "Ім'я персонажа",
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  onPressed: _generateName,
+                  onPressed: () => _generateName(state),
                   icon: const Icon(Icons.casino_outlined),
                   tooltip: 'Випадкове ім\'я',
                 ),
               ),
+              onChanged: (v) => state.update(() => state.name = v),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _selectedClass,
+              value: state.characterClass,
               decoration: const InputDecoration(
-                labelText: 'Клас',
-                border: OutlineInputBorder(),
-              ),
+                  labelText: 'Клас', border: OutlineInputBorder()),
               menuMaxHeight: 180,
               items: _classes
                   .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                   .toList(),
-              onChanged: (v) => setState(() {
-                _selectedClass = v!;
-                _proficientSkills.clear();
-                _expertiseSkills.clear();
+              onChanged: (v) => state.update(() {
+                state.characterClass = v!;
+                state.proficientSkills.clear();
+                state.expertiseSkills.clear();
               }),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _selectedRace,
+              value: state.race,
               decoration: const InputDecoration(
-                labelText: 'Раса',
-                border: OutlineInputBorder(),
-              ),
+                  labelText: 'Раса', border: OutlineInputBorder()),
               menuMaxHeight: 180,
               items: _races
                   .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                   .toList(),
-              onChanged: (v) => setState(() => _selectedRace = v!),
+              onChanged: (v) => state.update(() => state.race = v!),
             ),
             const SizedBox(height: 12),
             Row(
@@ -639,20 +308,20 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 const SizedBox(width: 16),
                 _holdButton(
                   icon: Icons.remove_circle_outline,
-                  onTap: _level > 1 ? () => setState(() => _level--) : null,
+                  onTap: state.level > 1
+                      ? () => state.update(() => state.level--)
+                      : null,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '$_level',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text('${state.level}',
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 8),
                 _holdButton(
                   icon: Icons.add_circle_outline,
-                  onTap: _level < 20 ? () => setState(() => _level++) : null,
+                  onTap: state.level < 20
+                      ? () => state.update(() => state.level++)
+                      : null,
                 ),
               ],
             ),
@@ -662,64 +331,54 @@ class _CharacterScreenState extends State<CharacterScreen> {
     );
   }
 
-  Widget _buildHpBlock() {
-    final isDead = _currentHp == 0;
+  Widget _buildHpBlock(AppState state) {
+    final isDead = state.currentHp == 0;
+    final hpColor = _hpColor(state);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Здоров\'я',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text('Здоров\'я',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildHpCounter(
-                  'Макс',
-                  _maxHp,
-                  color: Colors.grey.shade400,
-                  onMinus: () => setState(() {
-                    if (_maxHp > 1) {
-                      _maxHp--;
-                      if (_currentHp > _maxHp) _currentHp = _maxHp;
-                    }
-                  }),
-                  onPlus: () => setState(() => _maxHp++),
-                ),
-                _buildHpCounter(
-                  'Поточні',
-                  _currentHp,
-                  color: _hpColor,
-                  onMinus: () => setState(() {
-                    if (_currentHp > 0) _currentHp--;
-                  }),
-                  onPlus: () => setState(() {
-                    if (_currentHp < _maxHp) _currentHp++;
-                  }),
-                ),
-                _buildHpCounter(
-                  'Тимчасові',
-                  _tempHp,
-                  color: Colors.blue.shade300,
-                  onMinus: () => setState(() {
-                    if (_tempHp > 0) _tempHp--;
-                  }),
-                  onPlus: () => setState(() => _tempHp++),
-                ),
+                _buildHpCounter('Макс', state.maxHp,
+                    color: Colors.grey.shade400,
+                    onMinus: () => state.update(() {
+                          if (state.maxHp > 1) {
+                            state.maxHp--;
+                            if (state.currentHp > state.maxHp)
+                              state.currentHp = state.maxHp;
+                          }
+                        }),
+                    onPlus: () => state.update(() => state.maxHp++)),
+                _buildHpCounter('Поточні', state.currentHp,
+                    color: hpColor,
+                    onMinus: () => state
+                        .update(() { if (state.currentHp > 0) state.currentHp--; }),
+                    onPlus: () => state.update(
+                        () { if (state.currentHp < state.maxHp) state.currentHp++; })),
+                _buildHpCounter('Тимчасові', state.tempHp,
+                    color: Colors.blue.shade300,
+                    onMinus: () => state
+                        .update(() { if (state.tempHp > 0) state.tempHp--; }),
+                    onPlus: () => state.update(() => state.tempHp++)),
               ],
             ),
             const SizedBox(height: 16),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
-                value: _maxHp > 0 ? (_currentHp / _maxHp).clamp(0.0, 1.0) : 0,
+                value: state.maxHp > 0
+                    ? (state.currentHp / state.maxHp).clamp(0.0, 1.0)
+                    : 0,
                 minHeight: 12,
                 backgroundColor: Colors.grey.shade800,
-                valueColor: AlwaysStoppedAnimation<Color>(_hpColor),
+                valueColor: AlwaysStoppedAnimation<Color>(hpColor),
               ),
             ),
             const SizedBox(height: 16),
@@ -738,18 +397,16 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _applyDamage,
+                  onPressed: () => _applyDamage(state),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade800,
-                  ),
+                      backgroundColor: Colors.red.shade800),
                   child: const Text('Пошкодження'),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _applyHeal,
+                  onPressed: () => _applyHeal(state),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade800,
-                  ),
+                      backgroundColor: Colors.green.shade800),
                   child: const Text('Зцілення'),
                 ),
               ],
@@ -758,63 +415,55 @@ class _CharacterScreenState extends State<CharacterScreen> {
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 8),
-              const Text(
-                'Кидки смерті',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              const Text('Кидки смерті',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Text('Успіх: ', style: TextStyle(color: Colors.green)),
-                  ...List.generate(
-                    3,
-                    (i) => GestureDetector(
-                      onTap: () => setState(() {
-                        _deathSuccesses = i < _deathSuccesses ? i : i + 1;
-                      }),
-                      child: Icon(
-                        i < _deathSuccesses
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: Colors.green,
-                        size: 28,
-                      ),
+                  const Text('Успіх: ',
+                      style: TextStyle(color: Colors.green)),
+                  ...List.generate(3, (i) => GestureDetector(
+                    onTap: () => state.update(() {
+                      state.deathSuccesses =
+                          i < state.deathSuccesses ? i : i + 1;
+                    }),
+                    child: Icon(
+                      i < state.deathSuccesses
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: Colors.green,
+                      size: 28,
                     ),
-                  ),
+                  )),
                   const SizedBox(width: 24),
-                  const Text('Провал: ', style: TextStyle(color: Colors.red)),
-                  ...List.generate(
-                    3,
-                    (i) => GestureDetector(
-                      onTap: () => setState(() {
-                        _deathFailures = i < _deathFailures ? i : i + 1;
-                      }),
-                      child: Icon(
-                        i < _deathFailures
-                            ? Icons.close_rounded
-                            : Icons.circle_outlined,
-                        color: Colors.red,
-                        size: 28,
-                      ),
+                  const Text('Провал: ',
+                      style: TextStyle(color: Colors.red)),
+                  ...List.generate(3, (i) => GestureDetector(
+                    onTap: () => state.update(() {
+                      state.deathFailures =
+                          i < state.deathFailures ? i : i + 1;
+                    }),
+                    child: Icon(
+                      i < state.deathFailures
+                          ? Icons.close_rounded
+                          : Icons.circle_outlined,
+                      color: Colors.red,
+                      size: 28,
                     ),
-                  ),
+                  )),
                 ],
               ),
-              if (_deathFailures >= 3)
+              if (state.deathFailures >= 3)
                 const Padding(
                   padding: EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Персонаж загинув...',
-                    style: TextStyle(color: Colors.red, fontSize: 16),
-                  ),
+                  child: Text('Персонаж загинув...',
+                      style: TextStyle(color: Colors.red, fontSize: 16)),
                 )
-              else if (_deathSuccesses >= 3)
+              else if (state.deathSuccesses >= 3)
                 const Padding(
                   padding: EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Стабілізований!',
-                    style: TextStyle(color: Colors.green, fontSize: 16),
-                  ),
+                  child: Text('Стабілізований!',
+                      style: TextStyle(color: Colors.green, fontSize: 16)),
                 ),
             ],
           ],
@@ -823,28 +472,16 @@ class _CharacterScreenState extends State<CharacterScreen> {
     );
   }
 
-  Widget _buildHpCounter(
-    String label,
-    int value, {
-    Color? color,
-    VoidCallback? onMinus,
-    VoidCallback? onPlus,
-  }) {
+  Widget _buildHpCounter(String label, int value,
+      {Color? color, VoidCallback? onMinus, VoidCallback? onPlus}) {
     return Column(
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
-        ),
+        Text(label,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
         const SizedBox(height: 4),
-        Text(
-          '$value',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
+        Text('$value',
+            style: TextStyle(
+                fontSize: 28, fontWeight: FontWeight.bold, color: color)),
         const SizedBox(height: 4),
         Row(
           children: [
@@ -857,14 +494,12 @@ class _CharacterScreenState extends State<CharacterScreen> {
     );
   }
 
-  Widget _buildStatsGrid() {
+  Widget _buildStatsGrid(AppState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Характеристики',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        const Text('Характеристики',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: 3,
@@ -873,31 +508,29 @@ class _CharacterScreenState extends State<CharacterScreen> {
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           childAspectRatio: 0.95,
-          children: _stats.entries
-              .map((e) => _buildStatCard(e.key, e.value))
+          children: state.stats.entries
+              .map((e) => _buildStatCard(state, e.key, e.value))
               .toList(),
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(String name, int value) {
+  Widget _buildStatCard(AppState state, String name, int value) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              name,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
+            Text(name,
+                style: const TextStyle(
+                    fontSize: 11, fontWeight: FontWeight.w500),
+                textAlign: TextAlign.center),
             const SizedBox(height: 4),
-            Text(
-              _modifierString(value),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
+            Text(_modifierString(value),
+                style: const TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -905,7 +538,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 _holdButton(
                   icon: Icons.remove,
                   onTap: value > 1
-                      ? () => setState(() => _stats[name] = value - 1)
+                      ? () => state
+                          .update(() => state.stats[name] = value - 1)
                       : null,
                 ),
                 const SizedBox(width: 6),
@@ -914,11 +548,180 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 _holdButton(
                   icon: Icons.add,
                   onTap: value < 30
-                      ? () => setState(() => _stats[name] = value + 1)
+                      ? () => state
+                          .update(() => state.stats[name] = value + 1)
                       : null,
                 ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSavingThrows(AppState state) {
+    final prof = _proficiencyBonus(state.level);
+    final defaultSaves = _classDefaultSaves(state.characterClass);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text('Рятівні кидки',
+                    style: TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Майстерність: +$prof',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...state.stats.keys.map((ability) {
+              final isProficient =
+                  defaultSaves.contains('save_$ability');
+              final mod = _modifier(state.stats[ability]!);
+              final bonus = isProficient ? mod + prof : mod;
+              final bonusStr = bonus >= 0 ? '+$bonus' : '$bonus';
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      isProficient
+                          ? Icons.circle
+                          : Icons.circle_outlined,
+                      size: 14,
+                      color: isProficient
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 36,
+                      child: Text(bonusStr,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                    Text(ability,
+                        style: const TextStyle(fontSize: 14)),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSkills(AppState state) {
+    final prof = _proficiencyBonus(state.level);
+    final maxProf = _maxProficiencies(state.characterClass);
+    final hasExp = _hasExpertise(state.characterClass);
+    final maxExp = hasExp ? 2 : 0;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Навички',
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            ..._skillAbility.entries.map((entry) {
+              final skillName = entry.key;
+              final abilityName = entry.value;
+              final isProficient =
+                  state.proficientSkills.contains(skillName);
+              final isExpertise =
+                  state.expertiseSkills.contains(skillName);
+              final mod = _modifier(state.stats[abilityName]!);
+              int bonus = mod;
+              if (isExpertise) {
+                bonus = mod + prof * 2;
+              } else if (isProficient) {
+                bonus = mod + prof;
+              }
+              final bonusStr = bonus >= 0 ? '+$bonus' : '$bonus';
+              return InkWell(
+                onTap: () => state.update(() {
+                  if (isExpertise) {
+                    state.expertiseSkills.remove(skillName);
+                  } else if (isProficient) {
+                    if (hasExp &&
+                        state.expertiseSkills.length < maxExp) {
+                      state.expertiseSkills.add(skillName);
+                    } else {
+                      state.proficientSkills.remove(skillName);
+                    }
+                  } else {
+                    if (state.proficientSkills.length < maxProf) {
+                      state.proficientSkills.add(skillName);
+                    }
+                  }
+                }),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isExpertise
+                            ? Icons.circle
+                            : isProficient
+                                ? Icons.circle_outlined
+                                : Icons.radio_button_unchecked,
+                        size: 14,
+                        color: isExpertise
+                            ? Colors.amber
+                            : isProficient
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 36,
+                        child: Text(bonusStr,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                      Expanded(
+                        child: Text(skillName,
+                            style: const TextStyle(fontSize: 14)),
+                      ),
+                      Text(
+                        abilityName.substring(0, 3).toUpperCase(),
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
           ],
         ),
       ),
