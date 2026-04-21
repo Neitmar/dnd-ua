@@ -1,3 +1,6 @@
+import 'dart:async';
+import '../models/character_model.dart';
+import '../services/storage_service.dart';
 import 'package:flutter/material.dart';
 
 class CharacterScreen extends StatefulWidget {
@@ -263,6 +266,59 @@ class _CharacterScreenState extends State<CharacterScreen> {
     _holdToken++;
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _loadCharacter();
+  }
+
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _saveCharacter();
+  }
+
+  Future<void> _loadCharacter() async {
+    final character = await StorageService.loadCharacter();
+    print('LOAD: character = $character');
+    if (character != null) {
+      print('LOAD: name = ${character.name}');
+      setState(() {
+        _nameController.text = character.name;
+        _selectedClass = character.characterClass;
+        _selectedRace = character.race;
+        _level = character.level;
+        _stats.addAll(character.stats);
+        _maxHp = character.maxHp;
+        _currentHp = character.currentHp;
+        _tempHp = character.tempHp;
+        _deathSuccesses = character.deathSuccesses;
+        _deathFailures = character.deathFailures;
+        _proficientSkills.addAll(character.proficientSkills);
+        _expertiseSkills.addAll(character.expertiseSkills);
+      });
+    }
+  }
+
+  void _saveCharacter() {
+    print('SAVE: name = ${_nameController.text}');
+    StorageService.saveCharacter(
+      CharacterModel(
+        name: _nameController.text,
+        characterClass: _selectedClass,
+        race: _selectedRace,
+        level: _level,
+        stats: Map.from(_stats),
+        maxHp: _maxHp,
+        currentHp: _currentHp,
+        tempHp: _tempHp,
+        deathSuccesses: _deathSuccesses,
+        deathFailures: _deathFailures,
+        proficientSkills: Set.from(_proficientSkills),
+        expertiseSkills: Set.from(_expertiseSkills),
+      ),
+    );
+  }
+
   Widget _holdButton({required IconData icon, required VoidCallback? onTap}) {
     if (onTap == null) {
       return Padding(
@@ -352,70 +408,77 @@ class _CharacterScreenState extends State<CharacterScreen> {
   }
 
   Widget _buildSavingThrows() {
-  final abilities = _stats.keys.toList();
-  return Card(
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text('Рятівні кидки',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
+    final abilities = _stats.keys.toList();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Рятівні кидки',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                child: Text(
-                  'Майстерність: +$_proficiencyBonus',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
                   ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...abilities.map((ability) {
-            final isProficient = _classDefaultSaves.contains('save_$ability');
-            final mod = _modifier(_stats[ability]!);
-            final bonus = isProficient ? mod + _proficiencyBonus : mod;
-            final bonusStr = bonus >= 0 ? '+$bonus' : '$bonus';
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Icon(
-                    isProficient ? Icons.circle : Icons.circle_outlined,
-                    size: 14,
-                    color: isProficient
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 36,
-                    child: Text(
-                      bonusStr,
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.bold),
+                  child: Text(
+                    'Майстерність: +$_proficiencyBonus',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                   ),
-                  Text(ability, style: const TextStyle(fontSize: 14)),
-                ],
-              ),
-            );
-          }),
-        ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...abilities.map((ability) {
+              final isProficient = _classDefaultSaves.contains('save_$ability');
+              final mod = _modifier(_stats[ability]!);
+              final bonus = isProficient ? mod + _proficiencyBonus : mod;
+              final bonusStr = bonus >= 0 ? '+$bonus' : '$bonus';
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      isProficient ? Icons.circle : Icons.circle_outlined,
+                      size: 14,
+                      color: isProficient
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 36,
+                      child: Text(
+                        bonusStr,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Text(ability, style: const TextStyle(fontSize: 14)),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildSkills() {
     return Card(
