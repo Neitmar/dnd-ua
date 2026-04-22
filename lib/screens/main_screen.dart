@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
 import 'character_screen.dart';
 import 'combat_screen.dart';
 import 'spells_screen.dart';
 import 'inventory_screen.dart';
 import 'dice_screen.dart';
+import 'tavern_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -25,6 +28,12 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+
+    if (!state.onboardingDone) {
+      return const TavernScreen();
+    }
+
     return Scaffold(
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(

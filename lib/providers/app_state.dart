@@ -4,6 +4,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppState extends ChangeNotifier {
   static const _key = 'app_state';
+  static const _onboardingKey = 'onboarding_done';
+
+bool onboardingDone = false;
+
+Future<void> checkOnboarding() async {
+  final prefs = await SharedPreferences.getInstance();
+  onboardingDone = prefs.getBool(_onboardingKey) ?? false;
+}
+
+Future<void> completeOnboarding() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(_onboardingKey, true);
+  onboardingDone = true;
+  notifyListeners();
+}
 
   // --- Персонаж ---
   String name = 'Новий герой';

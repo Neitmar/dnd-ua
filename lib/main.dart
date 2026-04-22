@@ -7,13 +7,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final appState = AppState();
   await appState.load();
+  await appState.checkOnboarding();
 
-  runApp(
-    ChangeNotifierProvider.value(
-      value: appState,
-      child: const DndApp(),
-    ),
-  );
+  runApp(ChangeNotifierProvider.value(value: appState, child: const DndApp()));
 }
 
 class DndApp extends StatelessWidget {
