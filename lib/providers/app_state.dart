@@ -35,7 +35,18 @@ class AppState extends ChangeNotifier {
   int gold = 0;
   int platinum = 0;
 
-  // --- Збереження ---
+  // --- Заклинання ---
+  String spellcastingAbility = 'Інтелект';
+  List<Map<String, dynamic>> preparedSpells = [];
+  List<Map<String, dynamic>> knownSpells = [];
+  Map<int, int> spellSlots = {
+    1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0,
+  };
+  Map<int, int> usedSpellSlots = {
+    1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0,
+  };
+
+  // --- Завантаження ---
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     final json = prefs.getString(_key);
@@ -56,15 +67,27 @@ class AppState extends ChangeNotifier {
     proficientSkills = Set<String>.from(data['proficientSkills'] ?? []);
     expertiseSkills = Set<String>.from(data['expertiseSkills'] ?? []);
     inventory = List<Map<String, dynamic>>.from(
-        (data['inventory'] ?? []).map((i) => Map<String, dynamic>.from(i)));
+      (data['inventory'] ?? []).map((i) => Map<String, dynamic>.from(i)));
     copper = data['copper'] ?? 0;
     silver = data['silver'] ?? 0;
     gold = data['gold'] ?? 0;
     platinum = data['platinum'] ?? 0;
+    spellcastingAbility = data['spellcastingAbility'] ?? 'Інтелект';
+    preparedSpells = List<Map<String, dynamic>>.from(
+      (data['preparedSpells'] ?? []).map((i) => Map<String, dynamic>.from(i)));
+    knownSpells = List<Map<String, dynamic>>.from(
+      (data['knownSpells'] ?? []).map((i) => Map<String, dynamic>.from(i)));
+    spellSlots = (data['spellSlots'] as Map?)?.map(
+      (k, v) => MapEntry(int.parse(k.toString()), v as int)) ??
+        {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0};
+    usedSpellSlots = (data['usedSpellSlots'] as Map?)?.map(
+      (k, v) => MapEntry(int.parse(k.toString()), v as int)) ??
+        {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0};
 
     notifyListeners();
   }
 
+  // --- Збереження ---
   Future<void> save() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, jsonEncode({
@@ -85,6 +108,11 @@ class AppState extends ChangeNotifier {
       'silver': silver,
       'gold': gold,
       'platinum': platinum,
+      'spellcastingAbility': spellcastingAbility,
+      'preparedSpells': preparedSpells,
+      'knownSpells': knownSpells,
+      'spellSlots': spellSlots.map((k, v) => MapEntry(k.toString(), v)),
+      'usedSpellSlots': usedSpellSlots.map((k, v) => MapEntry(k.toString(), v)),
     }));
   }
 
