@@ -277,7 +277,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: state.characterClass,
+              initialValue: state.characterClass,
               decoration: const InputDecoration(
                   labelText: 'Клас', border: OutlineInputBorder()),
               menuMaxHeight: 180,
@@ -292,7 +292,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: state.race,
+              initialValue: state.race,
               decoration: const InputDecoration(
                   labelText: 'Раса', border: OutlineInputBorder()),
               menuMaxHeight: 180,
@@ -351,8 +351,9 @@ class _CharacterScreenState extends State<CharacterScreen> {
                     onMinus: () => state.update(() {
                           if (state.maxHp > 1) {
                             state.maxHp--;
-                            if (state.currentHp > state.maxHp)
+                            if (state.currentHp > state.maxHp) {
                               state.currentHp = state.maxHp;
+                            }
                           }
                         }),
                     onPlus: () => state.update(() => state.maxHp++)),
