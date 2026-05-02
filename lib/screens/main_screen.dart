@@ -7,6 +7,7 @@ import 'spells_screen.dart';
 import 'inventory_screen.dart';
 import 'dice_screen.dart';
 import 'tavern_screen.dart';
+import 'armory_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -20,6 +21,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = const [
     CharacterScreen(),
+    ArmoryScreen(),
     CombatScreen(),
     SpellsScreen(),
     InventoryScreen(),
@@ -45,6 +47,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Персонаж',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shield_moon_outlined),
+            activeIcon: Icon(Icons.shield_moon),
+            label: 'Арморі',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.shield_outlined),
