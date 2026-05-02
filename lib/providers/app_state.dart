@@ -6,19 +6,19 @@ class AppState extends ChangeNotifier {
   static const _key = 'app_state';
   static const _onboardingKey = 'onboarding_done';
 
-bool onboardingDone = false;
+  bool onboardingDone = false;
 
-Future<void> checkOnboarding() async {
-  final prefs = await SharedPreferences.getInstance();
-  onboardingDone = prefs.getBool(_onboardingKey) ?? false;
-}
+  Future<void> checkOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    onboardingDone = prefs.getBool(_onboardingKey) ?? false;
+  }
 
-Future<void> completeOnboarding() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool(_onboardingKey, true);
-  onboardingDone = true;
-  notifyListeners();
-}
+  Future<void> completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingKey, true);
+    onboardingDone = true;
+    notifyListeners();
+  }
 
   // --- Персонаж ---
   String name = 'Новий герой';
@@ -84,6 +84,311 @@ Future<void> completeOnboarding() async {
     9: 0,
   };
 
+  // --- Екіпіровка (Арморі) ---
+  Map<String, String?> equipment = {
+    'head': null,
+    'neck': null,
+    'chest': null,
+    'belt': null,
+    'legs': null,
+    'boots': null,
+    'cloak': null,
+    'mainHand': null,
+    'offHand': null,
+    'ranged': null,
+    'gloves': null,
+    'ring1': null,
+    'ring2': null,
+    'extraSlot': null,
+    'backup': null,
+    'quiver': null,
+    'focus': null,
+    'tools': null,
+    'book': null,
+    'artifact1': null,
+    'artifact2': null,
+    'artifact3': null,
+    'artifact4': null,
+    'potion1': null,
+    'potion2': null,
+    'scroll': null,
+  };
+
+  static const int categoryPotion = 0;
+  static const int categoryArmor = 1;
+  static const int categoryWeapon = 2;
+  static const int categoryUseful = 3;
+  static const int categoryAccessory = 5;
+
+  void fillTestInventory() {
+    inventory = [
+      for (var i = 1; i <= 10; i++)
+        {
+          'name': 'Кільце $i',
+          'quantity': 1,
+          'weight': 0.1,
+          'description': 'Тестове кільце $i',
+          'isEquipped': i <= 2,
+          'category': categoryAccessory,
+          'subcategory': 'ring',
+        },
+      {
+        'name': 'Амулет Сили',
+        'quantity': 1,
+        'weight': 0.2,
+        'description': 'Містичний амулет на шию',
+        'isEquipped': true,
+        'category': categoryAccessory,
+        'subcategory': 'amulet',
+      },
+      {
+        'name': 'Сабля одноручна',
+        'quantity': 1,
+        'weight': 3.0,
+        'description': 'Одноручна зброя для швидких атак',
+        'isEquipped': true,
+        'category': categoryWeapon,
+        'subcategory': 'oneHanded',
+      },
+      {
+        'name': 'Дворучний меч',
+        'quantity': 1,
+        'weight': 6.5,
+        'description': 'Потужна дворучна зброя',
+        'isEquipped': false,
+        'category': categoryWeapon,
+        'subcategory': 'twoHanded',
+      },
+      {
+        'name': 'Щит клинковий',
+        'quantity': 1,
+        'weight': 5.0,
+        'description': 'Надійний щит для оборони',
+        'isEquipped': true,
+        'category': categoryWeapon,
+        'subcategory': 'offHand',
+      },
+      {
+        'name': 'Лук дальній',
+        'quantity': 1,
+        'weight': 2.5,
+        'description': 'Дальнє озброєння для бою на відстані',
+        'isEquipped': true,
+        'category': categoryWeapon,
+        'subcategory': 'ranged',
+      },
+      {
+        'name': 'Кинджал запасний',
+        'quantity': 1,
+        'weight': 1.0,
+        'description': 'Запасна коротка зброя',
+        'isEquipped': false,
+        'category': categoryWeapon,
+        'subcategory': 'backup',
+      },
+      {
+        'name': 'Шолом тест',
+        'quantity': 1,
+        'weight': 1.5,
+        'description': 'Тестовий шолом',
+        'isEquipped': true,
+        'category': categoryArmor,
+        'subcategory': 'head',
+      },
+      {
+        'name': 'Броня титану',
+        'quantity': 1,
+        'weight': 8.0,
+        'description': 'Тестова броня',
+        'isEquipped': true,
+        'category': categoryArmor,
+        'subcategory': 'chest',
+      },
+      {
+        'name': 'Поясний мішок',
+        'quantity': 1,
+        'weight': 0.7,
+        'description': 'Пояс для зберігання речей',
+        'isEquipped': true,
+        'category': categoryArmor,
+        'subcategory': 'belt',
+      },
+      {
+        'name': 'Поножі шкіряні',
+        'quantity': 1,
+        'weight': 1.2,
+        'description': 'Зручні поножі',
+        'isEquipped': true,
+        'category': categoryArmor,
+        'subcategory': 'legs',
+      },
+      {
+        'name': 'Чоботи праці',
+        'quantity': 1,
+        'weight': 1.0,
+        'description': 'Міцні чоботи',
+        'isEquipped': true,
+        'category': categoryArmor,
+        'subcategory': 'boots',
+      },
+      {
+        'name': 'Плащ невидимості',
+        'quantity': 1,
+        'weight': 0.8,
+        'description': 'Магічний плащ',
+        'isEquipped': true,
+        'category': categoryArmor,
+        'subcategory': 'cloak',
+      },
+      {
+        'name': 'Рукавиці майстра',
+        'quantity': 1,
+        'weight': 0.4,
+        'description': 'Зручні рукавиці',
+        'isEquipped': true,
+        'category': categoryArmor,
+        'subcategory': 'gloves',
+      },
+      {
+        'name': 'Місткий мішок',
+        'quantity': 1,
+        'weight': 1.3,
+        'description': 'Додатковий слот для речей',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'extraSlot',
+      },
+      {
+        'name': 'Набір інструментів',
+        'quantity': 1,
+        'weight': 2.0,
+        'description': 'Корисні інструменти',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'tools',
+      },
+      {
+        'name': 'Книга заклять',
+        'quantity': 1,
+        'weight': 2.2,
+        'description': 'Книга з магічними формулами',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'book',
+      },
+      {
+        'name': 'Кристал фокус',
+        'quantity': 1,
+        'weight': 0.5,
+        'description': 'Магічний фокус',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'focus',
+      },
+      {
+        'name': 'Сагайдак зі стрілами',
+        'quantity': 1,
+        'weight': 1.8,
+        'description': 'Стріли для дальньої зброї',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'quiver',
+      },
+      {
+        'name': 'Артефакт 1',
+        'quantity': 1,
+        'weight': 0.6,
+        'description': 'Містичний артефакт',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'artifact',
+      },
+      {
+        'name': 'Артефакт 2',
+        'quantity': 1,
+        'weight': 0.6,
+        'description': 'Містичний артефакт',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'artifact',
+      },
+      {
+        'name': 'Артефакт 3',
+        'quantity': 1,
+        'weight': 0.6,
+        'description': 'Містичний артефакт',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'artifact',
+      },
+      {
+        'name': 'Артефакт 4',
+        'quantity': 1,
+        'weight': 0.6,
+        'description': 'Містичний артефакт',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'artifact',
+      },
+      {
+        'name': 'Зілля лікування',
+        'quantity': 1,
+        'weight': 0.5,
+        'description': 'Потрібне для відновлення здоров’я',
+        'isEquipped': true,
+        'category': categoryPotion,
+        'subcategory': '',
+      },
+      {
+        'name': 'Зілля сили',
+        'quantity': 1,
+        'weight': 0.5,
+        'description': 'Додає тимчасову силу',
+        'isEquipped': true,
+        'category': categoryPotion,
+        'subcategory': '',
+      },
+      {
+        'name': 'Сувій вогняної кулі',
+        'quantity': 1,
+        'weight': 0.2,
+        'description': 'Одноразовий магічний сувій',
+        'isEquipped': true,
+        'category': categoryUseful,
+        'subcategory': 'scroll',
+      },
+    ];
+
+    equipment = {
+      'head': 'Шолом тест',
+      'neck': 'Амулет Сили',
+      'chest': 'Броня титану',
+      'belt': 'Поясний мішок',
+      'legs': 'Поножі шкіряні',
+      'boots': 'Чоботи праці',
+      'cloak': 'Плащ невидимості',
+      'mainHand': 'Сабля одноручна',
+      'offHand': 'Щит клинковий',
+      'ranged': 'Лук дальній',
+      'gloves': 'Рукавиці майстра',
+      'ring1': 'Кільце 1',
+      'ring2': 'Кільце 2',
+      'extraSlot': 'Місткий мішок',
+      'backup': 'Кинджал запасний',
+      'quiver': 'Сагайдак зі стрілами',
+      'focus': 'Кристал фокус',
+      'tools': 'Набір інструментів',
+      'book': 'Книга заклять',
+      'artifact1': 'Артефакт 1',
+      'artifact2': 'Артефакт 2',
+      'artifact3': 'Артефакт 3',
+      'artifact4': 'Артефакт 4',
+      'potion1': 'Зілля лікування',
+      'potion2': 'Зілля сили',
+      'scroll': 'Сувій вогняної кулі',
+    };
+  }
+
   // --- Завантаження ---
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -137,6 +442,12 @@ Future<void> completeOnboarding() async {
           (k, v) => MapEntry(int.parse(k.toString()), v as int),
         ) ??
         {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0};
+    equipment = Map<String, String?>.from(
+      (data['equipment'] as Map?)?.map(
+            (k, v) => MapEntry(k.toString(), v?.toString()),
+          ) ??
+          {},
+    );
 
     notifyListeners();
   }
@@ -176,6 +487,7 @@ Future<void> completeOnboarding() async {
         'usedSpellSlots': usedSpellSlots.map(
           (k, v) => MapEntry(k.toString(), v),
         ),
+        'equipment': equipment,
       }),
     );
   }

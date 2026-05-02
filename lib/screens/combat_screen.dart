@@ -568,7 +568,7 @@ class CombatScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: damageDice,
+                      initialValue: damageDice,
                       decoration: const InputDecoration(
                         labelText: 'Кубик шкоди',
                         border: OutlineInputBorder(),
@@ -590,7 +590,7 @@ class CombatScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: damageType,
+                      initialValue: damageType,
                       decoration: const InputDecoration(
                         labelText: 'Тип шкоди',
                         border: OutlineInputBorder(),

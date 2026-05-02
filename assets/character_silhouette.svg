@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400">
+  <!-- Голова -->
+  <circle cx="100" cy="40" r="28" fill="#4A3728" stroke="#8B6914" stroke-width="2"/>
+  <!-- Шия -->
+  <rect x="88" y="66" width="24" height="20" rx="4" fill="#4A3728" stroke="#8B6914" stroke-width="1.5"/>
+  <!-- Плечі та тулуб -->
+  <path d="M40 90 Q100 80 160 90 L155 200 Q100 210 45 200 Z" fill="#3D2B1F" stroke="#8B6914" stroke-width="2"/>
+  <!-- Ліва рука -->
+  <path d="M40 90 L15 95 L10 180 L30 182 L35 110 L45 108 Z" fill="#4A3728" stroke="#8B6914" stroke-width="1.5"/>
+  <!-- Права рука -->
+  <path d="M160 90 L185 95 L190 180 L170 182 L165 110 L155 108 Z" fill="#4A3728" stroke="#8B6914" stroke-width="1.5"/>
+  <!-- Ліва рукавиця -->
+  <ellipse cx="20" cy="188" rx="14" ry="10" fill="#5C3D1E" stroke="#8B6914" stroke-width="1.5"/>
+  <!-- Права рукавиця -->
+  <ellipse cx="180" cy="188" rx="14" ry="10" fill="#5C3D1E" stroke="#8B6914" stroke-width="1.5"/>
+  <!-- Пояс -->
+  <rect x="42" y="195" width="116" height="16" rx="4" fill="#5C3D1E" stroke="#8B6914" stroke-width="2"/>
+  <!-- Ліва нога -->
+  <path d="M45 210 L42 310 L70 312 L75 215 Z" fill="#3D2B1F" stroke="#8B6914" stroke-width="1.5"/>
+  <!-- Права нога -->
+  <path d="M155 210 L158 310 L130 312 L125 215 Z" fill="#3D2B1F" stroke="#8B6914" stroke-width="1.5"/>
+  <!-- Лівий чобіт -->
+  <path d="M42 308 L35 330 L72 332 L70 308 Z" rx="4" fill="#2A1A0F" stroke="#8B6914" stroke-width="1.5"/>
+  <!-- Правий чобіт -->
+  <path d="M158 308 L165 330 L128 332 L130 308 Z" fill="#2A1A0F" stroke="#8B6914" stroke-width="1.5"/>
+  <!-- Плащ деталі -->
+  <path d="M40 90 L20 280 L45 285 L50 200 Z" fill="#2A1A0F" stroke="#8B6914" stroke-width="1" opacity="0.6"/>
+  <path d="M160 90 L180 280 L155 285 L150 200 Z" fill="#2A1A0F" stroke="#8B6914" stroke-width="1" opacity="0.6"/>
+</svg>

@@ -221,7 +221,7 @@ class _SpellsScreenState extends State<SpellsScreen>
   }
 
   int _abilityModifier(AppState state) {
-    final score = (state.stats[state.spellcastingAbility] ?? 10) as int;
+    final score = (state.stats[state.spellcastingAbility] ?? 10);
     return (score - 10) ~/ 2;
   }
 
@@ -370,7 +370,7 @@ class _SpellsScreenState extends State<SpellsScreen>
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: castingTime,
+                        initialValue: castingTime,
                         decoration: const InputDecoration(
                           labelText: 'Час читання',
                           border: OutlineInputBorder(),
@@ -581,7 +581,7 @@ class _SpellsScreenState extends State<SpellsScreen>
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: state.spellcastingAbility,
+                          initialValue: state.spellcastingAbility,
                           decoration: const InputDecoration(
                             labelText: 'Характеристика',
                             border: OutlineInputBorder(),
