@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import '../dialogs/settings_dialog.dart';
 
 class DiceScreen extends StatefulWidget {
   const DiceScreen({super.key});
@@ -60,6 +61,21 @@ class _DiceScreenState extends State<DiceScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Кубики'),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Tooltip(
+            message: 'Налаштування',
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => const SettingsDialog(),
+                );
+              },
+            ),
+          ),
+        ),
         centerTitle: true,
         actions: [
           if (_history.isNotEmpty)

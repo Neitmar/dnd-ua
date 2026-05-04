@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import '../dialogs/settings_dialog.dart';
 
 enum ItemCategory { potion, armor, weapon, useful, quest, accessory }
 
@@ -388,7 +389,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final totalWeight = _totalWeight(state);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Інвентар'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Інвентар'),
+        centerTitle: true,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Tooltip(
+            message: 'Налаштування',
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => const SettingsDialog(),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showItemDialog(),
         child: const Icon(Icons.add),

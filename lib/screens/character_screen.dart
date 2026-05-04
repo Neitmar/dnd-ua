@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import '../dialogs/settings_dialog.dart';
 
 class CharacterScreen extends StatefulWidget {
   const CharacterScreen({super.key});
@@ -23,6 +24,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
     'Людина', 'Ельф', 'Дварф', 'Напіврослик',
     'Гном', 'Тифлінг', 'Драконороджений', 'Напівельф',
   ];
+
+  final List<String> _genders = ['Мужской', 'Женский'];
 
   final List<String> _maleNames = [
     'Аларік', 'Боррін', 'Кассіан', 'Дарен', 'Ельдар',
@@ -129,8 +132,15 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   void _generateName(AppState state) {
     final random = DateTime.now().millisecondsSinceEpoch;
-    final allNames = [..._maleNames, ..._femaleNames];
-    final firstName = allNames[random % allNames.length];
+    List<String> names;
+    if (state.gender == 'Женский') {
+      names = _femaleNames;
+    } else if (state.gender == 'Мужской') {
+      names = _maleNames;
+    } else {
+      names = [..._maleNames, ..._femaleNames];
+    }
+    final firstName = names[random % names.length];
     final lastName = _lastNames[(random ~/ 7) % _lastNames.length];
     final newName = '$firstName $lastName';
     _nameController.text = newName;
@@ -139,12 +149,6 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   // --- Hold логіка ---
   int _holdToken = 0;
-
-  void _beginHold(VoidCallback action) {
-    _holdToken++;
-    final myToken = _holdToken;
-    _scheduleRepeat(action, myToken);
-  }
 
   void _scheduleRepeat(VoidCallback action, int token) {
     Future.delayed(const Duration(milliseconds: 150), () {
@@ -231,6 +235,21 @@ class _CharacterScreenState extends State<CharacterScreen> {
       appBar: AppBar(
         title: const Text('Персонаж'),
         centerTitle: true,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Tooltip(
+            message: 'Налаштування',
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => const SettingsDialog(),
+                );
+              },
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -302,6 +321,16 @@ class _CharacterScreenState extends State<CharacterScreen> {
               onChanged: (v) => state.update(() => state.race = v!),
             ),
             const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: state.gender,
+              decoration: const InputDecoration(
+                  labelText: 'Стать', border: OutlineInputBorder()),
+              items: _genders
+                  .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                  .toList(),
+              onChanged: (v) => state.update(() => state.gender = v),
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 const Text('Рівень:', style: TextStyle(fontSize: 16)),
@@ -323,6 +352,21 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       ? () => state.update(() => state.level++)
                       : null,
                 ),
+                const SizedBox(width: 16),
+                Tooltip(
+                  message: 'Підняти рівень',
+                  child: ElevatedButton.icon(
+                    onPressed: state.level < 20
+                        ? () => state.update(() => state.level++)
+                        : null,
+                    icon: const Icon(Icons.arrow_upward),
+                    label: const Text('LVLup'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
               ],
             ),
           ],
@@ -334,6 +378,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
   Widget _buildHpBlock(AppState state) {
     final isDead = state.currentHp == 0;
     final hpColor = _hpColor(state);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600; // Для телефонов
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -343,33 +389,63 @@ class _CharacterScreenState extends State<CharacterScreen> {
             const Text('Здоров\'я',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildHpCounter('Макс', state.maxHp,
-                    color: Colors.grey.shade400,
-                    onMinus: () => state.update(() {
-                          if (state.maxHp > 1) {
-                            state.maxHp--;
-                            if (state.currentHp > state.maxHp) {
-                              state.currentHp = state.maxHp;
+            if (isSmallScreen)
+              Column(
+                children: [
+                  _buildHpCounter('Макс', state.maxHp,
+                      color: Colors.grey.shade400,
+                      onMinus: () => state.update(() {
+                            if (state.maxHp > 1) {
+                              state.maxHp--;
+                              if (state.currentHp > state.maxHp) {
+                                state.currentHp = state.maxHp;
+                              }
                             }
-                          }
-                        }),
-                    onPlus: () => state.update(() => state.maxHp++)),
-                _buildHpCounter('Поточні', state.currentHp,
-                    color: hpColor,
-                    onMinus: () => state
-                        .update(() { if (state.currentHp > 0) state.currentHp--; }),
-                    onPlus: () => state.update(
-                        () { if (state.currentHp < state.maxHp) state.currentHp++; })),
-                _buildHpCounter('Тимчасові', state.tempHp,
-                    color: Colors.blue.shade300,
-                    onMinus: () => state
-                        .update(() { if (state.tempHp > 0) state.tempHp--; }),
-                    onPlus: () => state.update(() => state.tempHp++)),
-              ],
-            ),
+                          }),
+                      onPlus: () => state.update(() => state.maxHp++)),
+                  const SizedBox(height: 8),
+                  _buildHpCounter('Поточні', state.currentHp,
+                      color: hpColor,
+                      onMinus: () => state
+                          .update(() { if (state.currentHp > 0) state.currentHp--; }),
+                      onPlus: () => state.update(
+                          () { if (state.currentHp < state.maxHp) state.currentHp++; })),
+                  const SizedBox(height: 8),
+                  _buildHpCounter('Тимчасові', state.tempHp,
+                      color: Colors.blue.shade300,
+                      onMinus: () => state
+                          .update(() { if (state.tempHp > 0) state.tempHp--; }),
+                      onPlus: () => state.update(() => state.tempHp++)),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildHpCounter('Макс', state.maxHp,
+                      color: Colors.grey.shade400,
+                      onMinus: () => state.update(() {
+                            if (state.maxHp > 1) {
+                              state.maxHp--;
+                              if (state.currentHp > state.maxHp) {
+                                state.currentHp = state.maxHp;
+                              }
+                            }
+                          }),
+                      onPlus: () => state.update(() => state.maxHp++)),
+                  _buildHpCounter('Поточні', state.currentHp,
+                      color: hpColor,
+                      onMinus: () => state
+                          .update(() { if (state.currentHp > 0) state.currentHp--; }),
+                      onPlus: () => state.update(
+                          () { if (state.currentHp < state.maxHp) state.currentHp++; })),
+                  _buildHpCounter('Тимчасові', state.tempHp,
+                      color: Colors.blue.shade300,
+                      onMinus: () => state
+                          .update(() { if (state.tempHp > 0) state.tempHp--; }),
+                      onPlus: () => state.update(() => state.tempHp++)),
+                ],
+              ),
             const SizedBox(height: 16),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -377,16 +453,16 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 value: state.maxHp > 0
                     ? (state.currentHp / state.maxHp).clamp(0.0, 1.0)
                     : 0,
-                minHeight: 12,
+                minHeight: isSmallScreen ? 20 : 12, // Увеличить на маленьких экранах
                 backgroundColor: Colors.grey.shade800,
                 valueColor: AlwaysStoppedAnimation<Color>(hpColor),
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+            if (isSmallScreen)
+              Column(
+                children: [
+                  TextField(
                     controller: _hpInputController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
@@ -395,23 +471,60 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       isDense: true,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _applyDamage(state),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade800),
-                  child: const Text('Пошкодження'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _applyHeal(state),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade800),
-                  child: const Text('Зцілення'),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _applyDamage(state),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade800),
+                          child: const Text('Пошкодження'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _applyHeal(state),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade800),
+                          child: const Text('Зцілення'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _hpInputController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Значення',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _applyDamage(state),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade800),
+                    child: const Text('Пошкодження'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _applyHeal(state),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade800),
+                    child: const Text('Зцілення'),
+                  ),
+                ],
+              ),
             if (isDead) ...[
               const SizedBox(height: 16),
               const Divider(),

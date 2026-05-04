@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/app_state.dart';
+import '../dialogs/settings_dialog.dart';
 
 class ArmoryScreen extends StatelessWidget {
   const ArmoryScreen({super.key});
@@ -417,7 +418,25 @@ class ArmoryScreen extends StatelessWidget {
     final slotW = (screenW - 48) / 3 - 4;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Арморі'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Арморі'),
+        centerTitle: true,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Tooltip(
+            message: 'Налаштування',
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => const SettingsDialog(),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

@@ -126,3 +126,114 @@ lib/
 ---
 
 **Нехай ваші кидки завжди будуть критичними! 🎲⚔️**
+- **🌙 Темна тема** - Зручний інтерфейс для гри в будь-який час доби
+- **💾 Збереження** - Автоматичне збереження всіх даних локально
+
+## 📱 Скріншоти
+
+<!-- Додайте скріншоти додатка тут -->
+
+## 🚀 Встановлення
+
+### Передумови
+
+- Flutter SDK 3.11.5 або вище
+- Dart SDK 3.11.5 або вище
+- Android Studio або VS Code з розширенням Flutter
+
+### Клонирование репозиторію
+
+```bash
+git clone https://github.com/Neitmar/dnd-ua.git
+cd dnd-ua
+```
+
+### Встановлення залежностей
+
+```bash
+flutter pub get
+```
+
+### Запуск додатка
+
+#### Для Android:
+```bash
+flutter run
+```
+
+#### Для iOS (тільки на macOS):
+```bash
+flutter run
+```
+
+#### Для Web:
+```bash
+flutter run -d chrome
+```
+
+## 🛠️ Технології
+
+- **Flutter** - UI фреймворк для кросплатформної розробки
+- **Dart** - Мова програмування
+- **Provider** - Стейт менеджмент
+- **Shared Preferences** - Локальне збереження даних
+- **Material Design** - Дизайн система
+
+## 📁 Структура проекту
+
+```
+lib/
+├── main.dart                 # Точка входу додатка
+├── providers/
+│   └── app_state.dart        # Головний провайдер стану
+├── screens/                  # Екрани додатка
+│   ├── main_screen.dart      # Головний екран
+│   ├── character_screen.dart # Екран персонажа
+│   ├── combat_screen.dart    # Бойовий екран
+│   ├── inventory_screen.dart # Екран інвентаря
+│   ├── spells_screen.dart    # Екран заклинань
+│   ├── armory_screen.dart    # Екран арморі
+│   ├── dice_screen.dart      # Екран кубиків
+│   └── tavern_screen.dart    # Екран таверни
+├── models/                   # Моделі даних
+├── services/                 # Сервіси
+└── data/                     # Статичні дані
+```
+
+## 🎮 Як грати
+
+1. **Створіть персонажа** - Введіть ім'я, клас, расу та характеристики
+2. **Налаштуйте інвентар** - Додайте предмети та екіпіруйте їх
+3. **Підготуйте заклинання** - Виберіть заклинання для вашого класу
+4. **Грай** - Використовуйте додаток під час гри для трекінгу
+
+## 🤝 Внесок
+
+Вітаються внески! Будь ласка, створіть Issue або Pull Request.
+
+### Як зробити внесок:
+
+1. Fork проект
+2. Створіть гілку для функції (`git checkout -b feature/AmazingFeature`)
+3. Commit зміни (`git commit -m 'Add some AmazingFeature'`)
+4. Push до гілки (`git push origin feature/AmazingFeature`)
+5. Відкрийте Pull Request
+
+## 📄 Ліцензія
+
+Цей проект ліцензовано під MIT License - дивіться файл [LICENSE](LICENSE) для деталей.
+
+## 🙏 Подяки
+
+- [Flutter](https://flutter.dev/) - За чудовий фреймворк
+- [Dungeons & Dragons](https://dnd.wizards.com/) - За неймовірну гру
+- Українська спільнота D&D - За натхнення
+
+## 📞 Контакти
+
+- Автор: [Neitmar](https://github.com/Neitmar)
+- Репозиторій: [https://github.com/Neitmar/dnd-ua](https://github.com/Neitmar/dnd-ua)
+
+---
+
+**Нехай ваші кидки завжди будуть критичними! 🎲⚔️**

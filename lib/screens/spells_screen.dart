@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import '../dialogs/settings_dialog.dart';
 import '../data/default_spells.dart';
 
 class SpellsScreen extends StatefulWidget {
@@ -502,6 +503,21 @@ class _SpellsScreenState extends State<SpellsScreen>
     appBar: AppBar(
       title: const Text('Вміння'),
       centerTitle: true,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 8.0),
+        child: Tooltip(
+          message: 'Налаштування',
+          child: IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => const SettingsDialog(),
+              );
+            },
+          ),
+        ),
+      ),
     ),
     body: SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -540,6 +556,21 @@ class _SpellsScreenState extends State<SpellsScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Заклинання'),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Tooltip(
+            message: 'Налаштування',
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => const SettingsDialog(),
+                );
+              },
+            ),
+          ),
+        ),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,

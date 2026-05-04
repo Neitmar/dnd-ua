@@ -1,16 +1,36 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/localization_service.dart';
+import '../services/cdn_service.dart';
 
 class AppState extends ChangeNotifier {
   static const _key = 'app_state';
   static const _onboardingKey = 'onboarding_done';
+  static const _languageKey = 'language';
 
   bool onboardingDone = false;
+  String language = 'uk'; // uk, ru, en
 
   Future<void> checkOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     onboardingDone = prefs.getBool(_onboardingKey) ?? false;
+    language = prefs.getString(_languageKey) ?? 'uk';
+    
+    // Загрузить кэш локализации
+    await LocalizationService.loadCachedTranslations();
+    
+    // Проверить необходимость обновления переводов (в фоне, не блокируя UI)
+    _checkTranslationUpdates();
+  }
+
+  void _checkTranslationUpdates() {
+    // Запустить в фоне
+    Future.microtask(() async {
+      if (language != 'uk') {
+        await CDNService.checkForUpdates(language);
+      }
+    });
   }
 
   Future<void> completeOnboarding() async {
@@ -24,6 +44,7 @@ class AppState extends ChangeNotifier {
   String name = 'Новий герой';
   String characterClass = 'Воїн';
   String race = 'Людина';
+  String? gender; // Мужской или Женский
   int level = 1;
 
   Map<String, int> stats = {
@@ -392,6 +413,7 @@ class AppState extends ChangeNotifier {
   // --- Завантаження ---
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
+    language = prefs.getString(_languageKey) ?? 'uk';
     final json = prefs.getString(_key);
     if (json == null) return;
 
@@ -400,6 +422,7 @@ class AppState extends ChangeNotifier {
     name = data['name'] ?? 'Новий герой';
     characterClass = data['characterClass'] ?? 'Воїн';
     race = data['race'] ?? 'Людина';
+    gender = data['gender'];
     level = data['level'] ?? 1;
     stats = Map<String, int>.from(data['stats'] ?? {});
     maxHp = data['maxHp'] ?? 10;
@@ -455,12 +478,14 @@ class AppState extends ChangeNotifier {
   // --- Збереження ---
   Future<void> save() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_languageKey, language);
     await prefs.setString(
       _key,
       jsonEncode({
         'name': name,
         'characterClass': characterClass,
         'race': race,
+        'gender': gender,
         'level': level,
         'stats': stats,
         'maxHp': maxHp,
@@ -497,5 +522,18 @@ class AppState extends ChangeNotifier {
     fn();
     notifyListeners();
     save();
+  }
+
+  Future<void> changeLanguage(String newLanguage) async {
+    if (newLanguage == language) return;
+
+    language = newLanguage;
+    await save();
+    notifyListeners();
+
+    // Загрузить переводы для выбранного языка (в фоне)
+    if (newLanguage != 'uk') {
+      await CDNService.loadTranslationsForLanguage(newLanguage);
+    }
   }
 }

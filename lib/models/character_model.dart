@@ -2,6 +2,7 @@ class CharacterModel {
   String name;
   String characterClass;
   String race;
+  String? gender; // Мужской или Женский
   int level;
   Map<String, int> stats;
   int maxHp;
@@ -21,6 +22,7 @@ class CharacterModel {
     this.name = 'Новий герой',
     this.characterClass = 'Воїн',
     this.race = 'Людина',
+    this.gender,
     this.level = 1,
     Map<String, int>? stats,
     this.maxHp = 10,
@@ -52,6 +54,7 @@ class CharacterModel {
         'name': name,
         'characterClass': characterClass,
         'race': race,
+        'gender': gender,
         'level': level,
         'stats': stats,
         'maxHp': maxHp,
@@ -73,6 +76,7 @@ class CharacterModel {
       name: json['name'] ?? 'Новий герой',
       characterClass: json['characterClass'] ?? 'Воїн',
       race: json['race'] ?? 'Людина',
+      gender: json['gender'],
       level: json['level'] ?? 1,
       stats: Map<String, int>.from(json['stats'] ?? {}),
       maxHp: json['maxHp'] ?? 10,

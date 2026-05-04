@@ -1,0 +1,293 @@
+{
+  "classes": {
+    "warrior": {
+      "name": "Warrior",
+      "description": "Master of combat with sword and shield...",
+      "features": {
+        "1": "Second Wind, Fighting Style"
+      }
+    },
+    "mage": {
+      "name": "Mage",
+      "description": "Master of arcane magic...",
+      "features": {
+        "1": "Spellcasting, Arcane Recovery"
+      }
+    },
+    "priest": {
+      "name": "Priest",
+      "description": "Divine spellcaster...",
+      "features": {
+        "1": "Divine Domain, Spellcasting"
+      }
+    },
+    "rogue": {
+      "name": "Rogue",
+      "description": "Master of stealth and trickery...",
+      "features": {
+        "1": "Sneak Attack, Thieves' Cant"
+      }
+    },
+    "paladin": {
+      "name": "Paladin",
+      "description": "Holy warrior...",
+      "features": {
+        "1": "Divine Sense, Lay on Hands"
+      }
+    },
+    "ranger": {
+      "name": "Ranger",
+      "description": "Master of wilderness and archery...",
+      "features": {
+        "1": "Favored Enemy, Natural Explorer"
+      }
+    },
+    "barbarian": {
+      "name": "Barbarian",
+      "description": "Furious warrior...",
+      "features": {
+        "1": "Rage, Unarmored Defense"
+      }
+    },
+    "druid": {
+      "name": "Druid",
+      "description": "Guardian of nature...",
+      "features": {
+        "1": "Druidcraft, Spellcasting"
+      }
+    },
+    "bard": {
+      "name": "Bard",
+      "description": "Master of music and magic...",
+      "features": {
+        "1": "Spellcasting, Bardic Inspiration"
+      }
+    },
+    "sorcerer": {
+      "name": "Sorcerer",
+      "description": "Innate magical power...",
+      "features": {
+        "1": "Spellcasting, Sorcerous Origin"
+      }
+    },
+    "warlock": {
+      "name": "Warlock",
+      "description": "Pact-bound spellcaster...",
+      "features": {
+        "1": "Otherworldly Patron, Pact Magic"
+      }
+    },
+    "monk": {
+      "name": "Monk",
+      "description": "Master of martial arts...",
+      "features": {
+        "1": "Unarmored Defense, Martial Arts"
+      }
+    }
+  },
+  "races": {
+    "human": {
+      "name": "Human",
+      "description": "Humans are the most adaptable and ambitious people among the common races...",
+      "traits": ["Ability Score Increase: +1 to all ability scores", "Skills: Any skill", "Feat: Any feat"]
+    },
+    "elf": {
+      "name": "Elf",
+      "description": "Elves are a magical people of otherworldly grace...",
+      "traits": ["Ability Score Increase: +2 Dexterity", "Darkvision", "Fey Ancestry", "Trance"]
+    },
+    "dwarf": {
+      "name": "Dwarf",
+      "description": "Bold and hardy, dwarves are known as skilled warriors, miners, and workers of stone and metal...",
+      "traits": ["Ability Score Increase: +2 Constitution", "Darkvision", "Dwarven Resilience", "Stonecunning"]
+    },
+    "halfling": {
+      "name": "Halfling",
+      "description": "The diminutive halflings survive in a world full of larger creatures...",
+      "traits": ["Ability Score Increase: +2 Dexterity", "Lucky", "Brave", "Halfling Nimbleness"]
+    },
+    "gnome": {
+      "name": "Gnome",
+      "description": "A gnome's energy and enthusiasm for living shines through every inch of his or her tiny body...",
+      "traits": ["Ability Score Increase: +2 Intelligence", "Darkvision", "Gnome Cunning"]
+    },
+    "half-elf": {
+      "name": "Half-Elf",
+      "description": "Half-elves combine what some say are the best qualities of their elf and human parents...",
+      "traits": ["Ability Score Increase: +2 Charisma, +1 to two other ability scores", "Darkvision", "Fey Ancestry", "Skill Versatility"]
+    },
+    "half-orc": {
+      "name": "Half-Orc",
+      "description": "Half-orcs' grayish pigmentation, sloping foreheads, jutting jaws, prominent teeth, and towering builds make their orcish heritage plain for all to see...",
+      "traits": ["Ability Score Increase: +2 Strength, +1 Constitution", "Darkvision", "Menacing", "Relentless Endurance", "Savage Attacks"]
+    },
+    "tiefling": {
+      "name": "Tiefling",
+      "description": "Tieflings bear the mark of their infernal heritage...",
+      "traits": ["Ability Score Increase: +2 Charisma, +1 Intelligence", "Darkvision", "Hellish Resistance", "Infernal Legacy"]
+    }
+  },
+  "items": {
+    "weapons": {
+      "dagger": {
+        "name": "Dagger",
+        "type": "Simple Melee Weapon"
+      },
+      "shortsword": {
+        "name": "Shortsword",
+        "type": "Martial Melee Weapon"
+      },
+      "longsword": {
+        "name": "Longsword",
+        "type": "Martial Melee Weapon"
+      },
+      "greatsword": {
+        "name": "Greatsword",
+        "type": "Martial Melee Weapon"
+      },
+      "rapier": {
+        "name": "Rapier",
+        "type": "Martial Melee Weapon"
+      },
+      "scimitar": {
+        "name": "Scimitar",
+        "type": "Martial Melee Weapon"
+      },
+      "club": {
+        "name": "Club",
+        "type": "Simple Melee Weapon"
+      },
+      "mace": {
+        "name": "Mace",
+        "type": "Simple Melee Weapon"
+      },
+      "warhammer": {
+        "name": "Warhammer",
+        "type": "Martial Melee Weapon"
+      },
+      "quarterstaff": {
+        "name": "Quarterstaff",
+        "type": "Simple Melee Weapon"
+      },
+      "spear": {
+        "name": "Spear",
+        "type": "Simple Melee Weapon"
+      },
+      "crossbow-light": {
+        "name": "Light Crossbow",
+        "type": "Simple Ranged Weapon"
+      },
+      "shortbow": {
+        "name": "Shortbow",
+        "type": "Simple Ranged Weapon"
+      },
+      "longbow": {
+        "name": "Longbow",
+        "type": "Simple Ranged Weapon"
+      }
+    },
+    "armor": {
+      "padded": {
+        "name": "Padded Armor",
+        "type": "Light Armor"
+      },
+      "leather": {
+        "name": "Leather Armor",
+        "type": "Light Armor"
+      },
+      "studded-leather": {
+        "name": "Studded Leather Armor",
+        "type": "Light Armor"
+      },
+      "hide": {
+        "name": "Hide Armor",
+        "type": "Medium Armor"
+      },
+      "chain-shirt": {
+        "name": "Chain Shirt",
+        "type": "Medium Armor"
+      },
+      "scale-mail": {
+        "name": "Scale Mail",
+        "type": "Medium Armor"
+      },
+      "breastplate": {
+        "name": "Breastplate",
+        "type": "Medium Armor"
+      },
+      "half-plate": {
+        "name": "Half Plate",
+        "type": "Medium Armor"
+      },
+      "ring-mail": {
+        "name": "Ring Mail",
+        "type": "Heavy Armor"
+      },
+      "chain-mail": {
+        "name": "Chain Mail",
+        "type": "Heavy Armor"
+      },
+      "splint": {
+        "name": "Splint Armor",
+        "type": "Heavy Armor"
+      },
+      "plate": {
+        "name": "Plate Armor",
+        "type": "Heavy Armor"
+      }
+    },
+    "equipment": {
+      "backpack": {
+        "name": "Backpack",
+        "type": "Adventuring Gear"
+      },
+      "crowbar": {
+        "name": "Crowbar",
+        "type": "Adventuring Gear"
+      },
+      "hammer": {
+        "name": "Hammer",
+        "type": "Adventuring Gear"
+      },
+      "piton": {
+        "name": "Piton",
+        "type": "Adventuring Gear"
+      },
+      "lantern": {
+        "name": "Lantern",
+        "type": "Adventuring Gear"
+      },
+      "oil": {
+        "name": "Oil (flask)",
+        "type": "Adventuring Gear"
+      },
+      "rations": {
+        "name": "Rations (1 day)",
+        "type": "Adventuring Gear"
+      },
+      "waterskin": {
+        "name": "Waterskin",
+        "type": "Adventuring Gear"
+      },
+      "rope": {
+        "name": "Rope (50 feet)",
+        "type": "Adventuring Gear"
+      }
+    }
+  },
+  "ui": {
+    "settings": "Settings",
+    "language": "Language",
+    "character": "Character",
+    "inventory": "Inventory",
+    "spells": "Spells",
+    "combat": "Combat",
+    "armory": "Armory",
+    "tavern": "Tavern",
+    "dice": "Dice",
+    "export": "Export",
+    "google_account": "Connect Google Account",
+    "share_link": "Share as Link",
+    "print_pdf": "Print PDF"
+  }
+}
