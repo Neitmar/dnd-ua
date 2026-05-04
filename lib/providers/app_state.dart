@@ -7,6 +7,7 @@ class AppState extends ChangeNotifier {
   static const _onboardingKey = 'onboarding_done';
 
   bool onboardingDone = false;
+  String languageCode = 'uk';
 
   Future<void> checkOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
@@ -22,6 +23,7 @@ class AppState extends ChangeNotifier {
 
   // --- Персонаж ---
   String name = 'Новий герой';
+  String gender = 'male';
   String characterClass = 'Воїн';
   String race = 'Людина';
   int level = 1;
@@ -398,7 +400,9 @@ class AppState extends ChangeNotifier {
     final data = jsonDecode(json);
 
     name = data['name'] ?? 'Новий герой';
+    gender = data['gender'] ?? 'male';
     characterClass = data['characterClass'] ?? 'Воїн';
+    languageCode = data['languageCode'] ?? 'uk';
     race = data['race'] ?? 'Людина';
     level = data['level'] ?? 1;
     stats = Map<String, int>.from(data['stats'] ?? {});
@@ -459,6 +463,8 @@ class AppState extends ChangeNotifier {
       _key,
       jsonEncode({
         'name': name,
+        'gender': gender,
+        'languageCode': languageCode,
         'characterClass': characterClass,
         'race': race,
         'level': level,
@@ -497,5 +503,9 @@ class AppState extends ChangeNotifier {
     fn();
     notifyListeners();
     save();
+  }
+
+  void setLanguage(String code) {
+    update(() => languageCode = code);
   }
 }

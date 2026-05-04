@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import '../services/localization_service.dart';
+import '../widgets/settings_dialog.dart';
 
 const List<Map<String, dynamic>> _allConditions = [
   {
@@ -84,8 +85,21 @@ const List<Map<String, dynamic>> _allConditions = [
   },
 ];
 
-class CombatScreen extends StatelessWidget {
+class CombatScreen extends StatefulWidget {
   const CombatScreen({super.key});
+
+  @override
+  State<CombatScreen> createState() => _CombatScreenState();
+}
+
+class _CombatScreenState extends State<CombatScreen> {
+  final _hpAmountController = TextEditingController(text: '5');
+
+  @override
+  void dispose() {
+    _hpAmountController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +114,6 @@ class CombatScreen extends StatelessWidget {
       final toRemove = state.weapons.where((w) {
         final fromInventory = w['fromInventory'] == true;
         return fromInventory && !inventoryNames.contains(w['name'].toString());
-        
       }).toList();
 
       if (toRemove.isNotEmpty) {
@@ -111,14 +124,20 @@ class CombatScreen extends StatelessWidget {
         });
       }
     });
-    
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Бойові'), centerTitle: true),
+      appBar: AppBar(
+        title: Text(tr(context, 'combat')),
+        centerTitle: true,
+        actions: settingsAction(context),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildHpPanel(state),
+            const SizedBox(height: 16),
             _buildCombatStats(context, state),
             const SizedBox(height: 16),
             _buildWeapons(context, state),
@@ -207,6 +226,163 @@ class CombatScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHpPanel(AppState state) {
+    return Card(
+      color: const Color(0xFF1F1A15),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              'ПУНКТИ ЗДОРОВ\'Я',
+              style: TextStyle(
+                color: Color(0xFFC9A961),
+                fontFamily: 'Cinzel',
+                fontSize: 14,
+                letterSpacing: 3,
+              ),
+            ),
+            const SizedBox(height: 32),
+            HpOrb(
+              currentHp: state.currentHp,
+              maxHp: state.maxHp,
+              tempHp: state.tempHp,
+              size: 180,
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton.filled(
+                  style: IconButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B2E2E),
+                  ),
+                  onPressed: () => _damage(state, _hpAmount()),
+                  icon: const Icon(Icons.remove),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 82,
+                  child: TextField(
+                    controller: _hpAmountController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                IconButton.filled(
+                  style: IconButton.styleFrom(
+                    backgroundColor: const Color(0xFF2E5D3A),
+                  ),
+                  onPressed: () => _heal(state, _hpAmount()),
+                  icon: const Icon(Icons.add),
+                ),
+              ],
+            ),
+            if (state.currentHp == 0) ...[
+              const SizedBox(height: 18),
+              _buildDeathSaves(state),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _hpAmount() {
+    final amount = int.tryParse(_hpAmountController.text.trim()) ?? 0;
+    return amount < 0 ? -amount : amount;
+  }
+
+  void _damage(AppState state, int amount) {
+    state.update(() {
+      if (state.tempHp > 0) {
+        final absorbed = amount > state.tempHp ? state.tempHp : amount;
+        state.tempHp -= absorbed;
+        final remaining = amount - absorbed;
+        state.currentHp = (state.currentHp - remaining)
+            .clamp(0, state.maxHp)
+            .toInt();
+      } else {
+        state.currentHp = (state.currentHp - amount)
+            .clamp(0, state.maxHp)
+            .toInt();
+      }
+    });
+  }
+
+  void _heal(AppState state, int amount) {
+    state.update(() {
+      state.currentHp = (state.currentHp + amount)
+          .clamp(0, state.maxHp)
+          .toInt();
+    });
+  }
+
+  Widget _buildDeathSaves(AppState state) {
+    return Column(
+      children: [
+        const Divider(),
+        const SizedBox(height: 8),
+        const Text(
+          'КИДКИ СМЕРТІ',
+          style: TextStyle(
+            color: Color(0xFFC9A961),
+            fontFamily: 'Cinzel',
+            fontSize: 12,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Успіх: ', style: TextStyle(color: Colors.green)),
+            ...List.generate(
+              3,
+              (i) => IconButton(
+                onPressed: () => state.update(() {
+                  state.deathSuccesses = i < state.deathSuccesses ? i : i + 1;
+                }),
+                icon: Icon(
+                  i < state.deathSuccesses
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                  color: Colors.green,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Провал: ', style: TextStyle(color: Colors.red)),
+            ...List.generate(
+              3,
+              (i) => IconButton(
+                onPressed: () => state.update(() {
+                  state.deathFailures = i < state.deathFailures ? i : i + 1;
+                }),
+                icon: Icon(
+                  i < state.deathFailures
+                      ? Icons.close_rounded
+                      : Icons.circle_outlined,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (state.deathFailures >= 3)
+          const Text('Персонаж загинув...', style: TextStyle(color: Colors.red))
+        else if (state.deathSuccesses >= 3)
+          const Text('Стабілізований!', style: TextStyle(color: Colors.green)),
+      ],
     );
   }
 
@@ -464,237 +640,277 @@ class CombatScreen extends StatelessWidget {
     );
   }
 
-  void _showWeaponDialog(BuildContext context, AppState state, {int? editIndex}) {
-  final weapon = editIndex != null ? state.weapons[editIndex] : null;
-  final nameController = TextEditingController(text: weapon?['name'] ?? '');
-  final notesController = TextEditingController(text: weapon?['notes'] ?? '');
-  String damageDice = weapon?['damage'] ?? '1d6';
-  String damageType = weapon?['damageType'] ?? 'рубляча';
-  bool proficient = weapon?['proficient'] ?? true;
-  bool finesse = weapon?['finesse'] ?? false;
-  bool ranged = weapon?['ranged'] ?? false;
+  void _showWeaponDialog(
+    BuildContext context,
+    AppState state, {
+    int? editIndex,
+  }) {
+    final weapon = editIndex != null ? state.weapons[editIndex] : null;
+    final nameController = TextEditingController(text: weapon?['name'] ?? '');
+    final notesController = TextEditingController(text: weapon?['notes'] ?? '');
+    String damageDice = weapon?['damage'] ?? '1d6';
+    String damageType = weapon?['damageType'] ?? 'рубляча';
+    bool proficient = weapon?['proficient'] ?? true;
+    bool finesse = weapon?['finesse'] ?? false;
+    bool ranged = weapon?['ranged'] ?? false;
 
-  final inventoryWeapons = state.inventory
-      .where((i) => i['category'] == 2)
-      .toList();
+    final inventoryWeapons = state.inventory
+        .where((i) => i['category'] == 2)
+        .toList();
 
-  showDialog(
-    context: context,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setDialogState) => AlertDialog(
-        title: Text(editIndex != null ? 'Редагувати зброю' : 'Додати зброю'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- З ІНВЕНТАРЮ ---
-              if (editIndex == null && inventoryWeapons.isNotEmpty) ...[
-                const Text('З інвентарю',
-                    style: TextStyle(fontSize: 13, color: Colors.grey)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: inventoryWeapons.map((item) {
-                    final alreadyAdded = state.weapons
-                        .any((w) => w['name'] == item['name']);
-                    return GestureDetector(
-                      onTap: alreadyAdded ? null : () {
-                        // ← ТУТ fromInventory: true
-                        state.update(() => state.weapons.add({
-                          'name': item['name'],
-                          'damage': '1d6',
-                          'damageType': 'рубляча',
-                          'proficient': true,
-                          'finesse': false,
-                          'ranged': false,
-                          'notes': item['description'] ?? '',
-                          'fromInventory': true,
-                        }));
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: alreadyAdded
-                              ? Colors.grey.shade800
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer
-                                  .withOpacity(0.3),
-                          border: Border.all(
-                            color: alreadyAdded
-                                ? Colors.grey.shade700
-                                : Theme.of(context).colorScheme.primary,
-                            width: 0.5,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          item['name'],
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: alreadyAdded
-                                ? Colors.grey.shade600
-                                : Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 8),
-                const Text('Нова зброя',
-                    style: TextStyle(fontSize: 13, color: Colors.grey)),
-                const SizedBox(height: 8),
-              ],
-
-              // --- НОВА ЗБРОЯ (форма) ---
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Назва',
-                  border: OutlineInputBorder(),
-                ),
-                maxLength: 40,
-                autofocus: editIndex != null,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: damageDice,
-                      decoration: const InputDecoration(
-                        labelText: 'Кубик шкоди',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 12),
-                      ),
-                      items: [
-                        '1d4','1d6','1d8','1d10','1d12',
-                        '2d6','2d8','2d10','2d12',
-                      ]
-                          .map((d) => DropdownMenuItem(
-                              value: d, child: Text(d)))
-                          .toList(),
-                      onChanged: (v) =>
-                          setDialogState(() => damageDice = v!),
-                    ),
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(editIndex != null ? 'Редагувати зброю' : 'Додати зброю'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- З ІНВЕНТАРЮ ---
+                if (editIndex == null && inventoryWeapons.isNotEmpty) ...[
+                  const Text(
+                    'З інвентарю',
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: damageType,
-                      decoration: const InputDecoration(
-                        labelText: 'Тип шкоди',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 12),
-                      ),
-                      menuMaxHeight: 200,
-                      items: [
-                        'рубляча','колюча','дробляча',
-                        'вогняна','холодна','блискавкова',
-                        'кислотна','некротична','силова',
-                        'отруйна','психічна','громова','променева',
-                      ]
-                          .map((t) => DropdownMenuItem(
-                              value: t, child: Text(t)))
-                          .toList(),
-                      onChanged: (v) =>
-                          setDialogState(() => damageType = v!),
-                    ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: inventoryWeapons.map((item) {
+                      final alreadyAdded = state.weapons.any(
+                        (w) => w['name'] == item['name'],
+                      );
+                      return GestureDetector(
+                        onTap: alreadyAdded
+                            ? null
+                            : () {
+                                // ← ТУТ fromInventory: true
+                                state.update(
+                                  () => state.weapons.add({
+                                    'name': item['name'],
+                                    'damage': '1d6',
+                                    'damageType': 'рубляча',
+                                    'proficient': true,
+                                    'finesse': false,
+                                    'ranged': false,
+                                    'notes': item['description'] ?? '',
+                                    'fromInventory': true,
+                                  }),
+                                );
+                                Navigator.pop(context);
+                              },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: alreadyAdded
+                                ? Colors.grey.shade800
+                                : Theme.of(context).colorScheme.primaryContainer
+                                      .withOpacity(0.3),
+                            border: Border.all(
+                              color: alreadyAdded
+                                  ? Colors.grey.shade700
+                                  : Theme.of(context).colorScheme.primary,
+                              width: 0.5,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            item['name'],
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: alreadyAdded
+                                  ? Colors.grey.shade600
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Нова зброя',
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
                 ],
-              ),
-              const SizedBox(height: 8),
-              CheckboxListTile(
-                title: const Text('Вміння з цією зброєю'),
-                value: proficient,
-                onChanged: (v) =>
-                    setDialogState(() => proficient = v!),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-              CheckboxListTile(
-                title: const Text('Фінесова (Спр замість Сили)'),
-                value: finesse,
-                onChanged: (v) =>
-                    setDialogState(() => finesse = v!),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-              CheckboxListTile(
-                title: const Text('Дальнобійна'),
-                value: ranged,
-                onChanged: (v) =>
-                    setDialogState(() => ranged = v!),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-              TextField(
-                controller: notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Нотатки (необов\'язково)',
-                  border: OutlineInputBorder(),
+
+                // --- НОВА ЗБРОЯ (форма) ---
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Назва',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLength: 40,
+                  autofocus: editIndex != null,
                 ),
-                maxLines: 2,
-                maxLength: 100,
-              ),
-            ],
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: damageDice,
+                        decoration: const InputDecoration(
+                          labelText: 'Кубик шкоди',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        items:
+                            [
+                                  '1d4',
+                                  '1d6',
+                                  '1d8',
+                                  '1d10',
+                                  '1d12',
+                                  '2d6',
+                                  '2d8',
+                                  '2d10',
+                                  '2d12',
+                                ]
+                                .map(
+                                  (d) => DropdownMenuItem(
+                                    value: d,
+                                    child: Text(d),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (v) => setDialogState(() => damageDice = v!),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: damageType,
+                        decoration: const InputDecoration(
+                          labelText: 'Тип шкоди',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        menuMaxHeight: 200,
+                        items:
+                            [
+                                  'рубляча',
+                                  'колюча',
+                                  'дробляча',
+                                  'вогняна',
+                                  'холодна',
+                                  'блискавкова',
+                                  'кислотна',
+                                  'некротична',
+                                  'силова',
+                                  'отруйна',
+                                  'психічна',
+                                  'громова',
+                                  'променева',
+                                ]
+                                .map(
+                                  (t) => DropdownMenuItem(
+                                    value: t,
+                                    child: Text(t),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (v) => setDialogState(() => damageType = v!),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                CheckboxListTile(
+                  title: const Text('Вміння з цією зброєю'),
+                  value: proficient,
+                  onChanged: (v) => setDialogState(() => proficient = v!),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                CheckboxListTile(
+                  title: const Text('Фінесова (Спр замість Сили)'),
+                  value: finesse,
+                  onChanged: (v) => setDialogState(() => finesse = v!),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                CheckboxListTile(
+                  title: const Text('Дальнобійна'),
+                  value: ranged,
+                  onChanged: (v) => setDialogState(() => ranged = v!),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                TextField(
+                  controller: notesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Нотатки (необов\'язково)',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                  maxLength: 100,
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Скасувати'),
-          ),
-          if (editIndex != null)
+          actions: [
             TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Скасувати'),
+            ),
+            if (editIndex != null)
+              TextButton(
+                onPressed: () {
+                  state.update(() => state.weapons.removeAt(editIndex));
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Видалити',
+                  style: TextStyle(color: Colors.red.shade400),
+                ),
+              ),
+            ElevatedButton(
               onPressed: () {
-                state.update(() => state.weapons.removeAt(editIndex));
+                if (nameController.text.trim().isEmpty) return;
+                // ← ТУТ fromInventory: false (додано вручну)
+                final w = {
+                  'name': nameController.text.trim(),
+                  'damage': damageDice,
+                  'damageType': damageType,
+                  'proficient': proficient,
+                  'finesse': finesse,
+                  'ranged': ranged,
+                  'notes': notesController.text.trim(),
+                  'fromInventory': false,
+                };
+                state.update(() {
+                  if (editIndex != null) {
+                    state.weapons[editIndex] = w;
+                  } else {
+                    state.weapons.add(w);
+                  }
+                });
                 Navigator.pop(context);
               },
-              child: Text('Видалити',
-                  style: TextStyle(color: Colors.red.shade400)),
+              child: Text(editIndex != null ? 'Зберегти' : 'Додати'),
             ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.trim().isEmpty) return;
-              // ← ТУТ fromInventory: false (додано вручну)
-              final w = {
-                'name': nameController.text.trim(),
-                'damage': damageDice,
-                'damageType': damageType,
-                'proficient': proficient,
-                'finesse': finesse,
-                'ranged': ranged,
-                'notes': notesController.text.trim(),
-                'fromInventory': false,
-              };
-              state.update(() {
-                if (editIndex != null) {
-                  state.weapons[editIndex] = w;
-                } else {
-                  state.weapons.add(w);
-                }
-              });
-              Navigator.pop(context);
-            },
-            child: Text(editIndex != null ? 'Зберегти' : 'Додати'),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // --- Стани ---
   Widget _buildConditions(BuildContext context, AppState state) {
@@ -804,6 +1020,93 @@ class CombatScreen extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Зрозуміло'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HpOrb extends StatelessWidget {
+  final int currentHp;
+  final int maxHp;
+  final int tempHp;
+  final double size;
+
+  const HpOrb({
+    super.key,
+    required this.currentHp,
+    required this.maxHp,
+    required this.tempHp,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ratio = maxHp > 0 ? currentHp / maxHp : 0.0;
+    final hpColor = ratio <= 0.25
+        ? Colors.redAccent
+        : ratio <= 0.5
+        ? Colors.orangeAccent
+        : Colors.greenAccent;
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [Colors.red.shade900, Colors.black],
+                stops: const [0.3, 1.0],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.35),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: size,
+            height: size,
+            child: CircularProgressIndicator(
+              value: ratio.clamp(0.0, 1.0),
+              strokeWidth: size * 0.1,
+              color: hpColor,
+              backgroundColor: Colors.grey.shade800,
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$currentHp / $maxHp',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: size * 0.12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (tempHp > 0) ...[
+                const SizedBox(height: 6),
+                Text(
+                  '+$tempHp тимч. HP',
+                  style: TextStyle(
+                    color: Colors.blue.shade200,
+                    fontSize: size * 0.07,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),

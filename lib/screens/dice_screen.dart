@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+import '../services/localization_service.dart';
+import '../widgets/settings_dialog.dart';
+
 class DiceScreen extends StatefulWidget {
   const DiceScreen({super.key});
 
@@ -38,8 +41,8 @@ class _DiceScreenState extends State<DiceScreen> {
     final modStr = _modifier > 0
         ? '+$_modifier'
         : _modifier < 0
-            ? '$_modifier'
-            : '';
+        ? '$_modifier'
+        : '';
 
     setState(() {
       _history.insert(0, {
@@ -59,7 +62,7 @@ class _DiceScreenState extends State<DiceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Кубики'),
+        title: Text(tr(context, 'dice')),
         centerTitle: true,
         actions: [
           if (_history.isNotEmpty)
@@ -68,6 +71,7 @@ class _DiceScreenState extends State<DiceScreen> {
               tooltip: 'Очистити історію',
               onPressed: () => setState(() => _history.clear()),
             ),
+          ...settingsAction(context),
         ],
       ),
       body: Column(
@@ -92,9 +96,7 @@ class _DiceScreenState extends State<DiceScreen> {
         mainAxisSpacing: 8,
         childAspectRatio: 1.4,
         physics: const NeverScrollableScrollPhysics(),
-        children: _diceTypes
-            .map((sides) => _buildDiceButton(sides))
-            .toList(),
+        children: _diceTypes.map((sides) => _buildDiceButton(sides)).toList(),
       ),
     );
   }
@@ -108,9 +110,7 @@ class _DiceScreenState extends State<DiceScreen> {
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.secondaryContainer,
         padding: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Text(
         'd$sides',
@@ -214,12 +214,14 @@ class _DiceScreenState extends State<DiceScreen> {
               backgroundColor: isCrit
                   ? Colors.green
                   : isFail
-                      ? Colors.red
-                      : Theme.of(context).colorScheme.primaryContainer,
+                  ? Colors.red
+                  : Theme.of(context).colorScheme.primaryContainer,
               child: Text(
                 item['label'],
                 style: const TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.bold),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             title: Row(
@@ -232,40 +234,46 @@ class _DiceScreenState extends State<DiceScreen> {
                     color: isCrit
                         ? Colors.green.shade300
                         : isFail
-                            ? Colors.red.shade300
-                            : null,
+                        ? Colors.red.shade300
+                        : null,
                   ),
                 ),
                 if (item['modifier'].isNotEmpty) ...[
                   const SizedBox(width: 6),
                   Text(
                     '(${item['result']}${item['modifier']})',
-                    style: TextStyle(
-                        fontSize: 13, color: Colors.grey.shade400),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
                   ),
                 ],
                 if (isCrit)
                   const Padding(
                     padding: EdgeInsets.only(left: 8),
-                    child: Text('КРИТ!',
-                        style: TextStyle(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'КРИТ!',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 if (isFail)
                   const Padding(
                     padding: EdgeInsets.only(left: 8),
-                    child: Text('ПРОВАЛ',
-                        style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'ПРОВАЛ',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
               ],
             ),
             subtitle: item['detail'].isNotEmpty
-                ? Text(item['detail'],
-                    style: TextStyle(
-                        fontSize: 12, color: Colors.grey.shade400))
+                ? Text(
+                    item['detail'],
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                  )
                 : null,
           ),
         );

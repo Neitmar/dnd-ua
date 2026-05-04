@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../data/default_spells.dart';
+import '../services/localization_service.dart';
+import '../widgets/settings_dialog.dart';
 
 class SpellsScreen extends StatefulWidget {
   const SpellsScreen({super.key});
@@ -498,49 +500,56 @@ class _SpellsScreenState extends State<SpellsScreen>
     });
 
     if (!_isSpellcaster) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('Вміння'),
-      centerTitle: true,
-    ),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline,
-                      color: Colors.grey.shade400, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${state.characterClass} не використовує магію, але може мати бойові вміння, крики, пози або техніки.',
-                      style: TextStyle(
-                          fontSize: 13, color: Colors.grey.shade400),
-                    ),
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(tr(context, 'abilities')),
+          centerTitle: true,
+          actions: settingsAction(context),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.grey.shade400,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${state.characterClass} не використовує магію, але може мати бойові вміння, крики, пози або техніки.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade400,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(height: 16),
+              _buildSpellList(state, state.preparedSpells, 'Вміння', true),
+            ],
           ),
-          const SizedBox(height: 16),
-          _buildSpellList(state, state.preparedSpells, 'Вміння', true),
-        ],
-      ),
-    ),
-  );
-}
+        ),
+      );
+    }
 
     final slots = _getSlotsForClass(state.characterClass, state.level);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Заклинання'),
+        title: Text(tr(context, 'spells')),
         centerTitle: true,
+        actions: settingsAction(context),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

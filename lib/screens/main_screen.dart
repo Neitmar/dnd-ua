@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import '../services/localization_service.dart';
 import 'character_screen.dart';
 import 'combat_screen.dart';
 import 'spells_screen.dart';
@@ -42,36 +43,36 @@ class _MainScreenState extends State<MainScreen> {
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Персонаж',
+            icon: const Icon(Icons.person_outline),
+            activeIcon: const Icon(Icons.person),
+            label: tr(context, 'character'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shield_moon_outlined),
-            activeIcon: Icon(Icons.shield_moon),
-            label: 'Арморі',
+            icon: const Icon(Icons.shield_moon_outlined),
+            activeIcon: const Icon(Icons.shield_moon),
+            label: tr(context, 'armory'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shield_outlined),
-            activeIcon: Icon(Icons.shield),
-            label: 'Бойові',
+            icon: const Icon(Icons.shield_outlined),
+            activeIcon: const Icon(Icons.shield),
+            label: tr(context, 'combat'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.auto_awesome_outlined),
-            activeIcon: Icon(Icons.auto_awesome),
-            label: 'Заклинання',
+            icon: const Icon(Icons.auto_awesome_outlined),
+            activeIcon: const Icon(Icons.auto_awesome),
+            label: tr(context, 'spells'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.backpack_outlined),
-            activeIcon: Icon(Icons.backpack),
-            label: 'Інвентар',
+            icon: const Icon(Icons.backpack_outlined),
+            activeIcon: const Icon(Icons.backpack),
+            label: tr(context, 'inventory'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.casino_outlined),
-            activeIcon: Icon(Icons.casino),
-            label: 'Кубики',
+            icon: const Icon(Icons.casino_outlined),
+            activeIcon: const Icon(Icons.casino),
+            label: tr(context, 'dice'),
           ),
         ],
       ),

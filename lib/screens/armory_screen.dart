@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/app_state.dart';
+import '../services/localization_service.dart';
+import '../widgets/settings_dialog.dart';
 
 class ArmoryScreen extends StatelessWidget {
   const ArmoryScreen({super.key});
@@ -153,7 +155,11 @@ class ArmoryScreen extends StatelessWidget {
     return names.join(_ringSeparator);
   }
 
-  void _clearItemFromOtherSlots(AppState state, String slotKey, String itemName) {
+  void _clearItemFromOtherSlots(
+    AppState state,
+    String slotKey,
+    String itemName,
+  ) {
     for (final key in state.equipment.keys.toList()) {
       if (key != slotKey && state.equipment[key] == itemName) {
         state.equipment[key] = null;
@@ -296,7 +302,11 @@ class ArmoryScreen extends StatelessWidget {
                               state.equipment[slotKey] = null;
                             } else {
                               if (!_isRingSlot(slotKey)) {
-                                _clearItemFromOtherSlots(state, slotKey, itemName);
+                                _clearItemFromOtherSlots(
+                                  state,
+                                  slotKey,
+                                  itemName,
+                                );
                               }
                               state.equipment[slotKey] = itemName;
                               if (slotKey == 'mainHand' &&
@@ -417,7 +427,11 @@ class ArmoryScreen extends StatelessWidget {
     final slotW = (screenW - 48) / 3 - 4;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Арморі'), centerTitle: true),
+      appBar: AppBar(
+        title: Text(tr(context, 'armory')),
+        centerTitle: true,
+        actions: settingsAction(context),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

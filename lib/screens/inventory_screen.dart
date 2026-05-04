@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import '../services/localization_service.dart';
+import '../widgets/settings_dialog.dart';
 
 enum ItemCategory { potion, armor, weapon, useful, quest, accessory }
 
@@ -388,7 +390,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final totalWeight = _totalWeight(state);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Інвентар'), centerTitle: true),
+      appBar: AppBar(
+        title: Text(tr(context, 'inventory')),
+        centerTitle: true,
+        actions: settingsAction(context),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showItemDialog(),
         child: const Icon(Icons.add),
@@ -594,14 +600,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final isSelected = _selectedCategory == cat;
     final chipColor = color ?? Colors.grey;
     return GestureDetector(
-      onTap: onTap ?? () {
-        setState(() {
-          _selectedCategory = isSelected ? null : cat;
-          if (_selectedCategory != null) {
-            _lastSelectedCategory = _selectedCategory;
-          }
-        });
-      },
+      onTap:
+          onTap ??
+          () {
+            setState(() {
+              _selectedCategory = isSelected ? null : cat;
+              if (_selectedCategory != null) {
+                _lastSelectedCategory = _selectedCategory;
+              }
+            });
+          },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
