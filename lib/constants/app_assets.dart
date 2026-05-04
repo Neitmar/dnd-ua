@@ -3,10 +3,17 @@ class AppAssets {
   // Фони - пергамент
   static const String bgParchment     = 'assets/images/bg_parchment.jpg';
   static const String bgParchmentDark = 'assets/images/bg_parchment_dark.jpg';
+  static const String bgTavern        = 'assets/images/bg_tavern.jpg';
 
   // Крила
   static const String wingDemon = 'assets/images/wing_demon.png';
   static const String wingAngel = 'assets/images/wing_angel.png';
+
+  // Кнопки
+  static const String btnNormal      = 'assets/images/btn_normal.png';
+  static const String btnActive      = 'assets/images/btn_active.png';
+  static const String btnLevelUp     = 'assets/images/btn_level_up.png';
+  static const String btnLevelUpActive = 'assets/images/btn_level_up_active.png';
 
   // Іконки навігації
   static const String navCharacter       = 'assets/icons/nav_character.png';
