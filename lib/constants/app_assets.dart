@@ -1,9 +1,9 @@
 /// Константи для статичних асетів DnD UI
 class AppAssets {
-  // Фони - пергамент
-  static const String bgParchment     = 'assets/images/bg_parchment.jpg';
-  static const String bgParchmentDark = 'assets/images/bg_parchment_dark.jpg';
+  // Фони
   static const String bgTavern        = 'assets/images/bg_tavern.jpg';
+  static const String bgParchment     = 'assets/images/bg_tavern.jpg'; // fallback на основний фон
+  static const String bgParchmentDark = 'assets/images/bg_tavern.jpg'; // fallback
 
   // Крила
   static const String wingDemon = 'assets/images/wing_demon.png';

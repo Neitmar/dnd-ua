@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../services/localization_service.dart';
+import '../widgets/dnd_ui_widgets.dart';
 import 'character_screen.dart';
 import 'combat_screen.dart';
 import 'spells_screen.dart';
@@ -37,11 +38,11 @@ class _MainScreenState extends State<MainScreen> {
       return const TavernScreen();
     }
 
-    return Scaffold(
+    return DndScaffold(
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (i) => setState(() => _currentIndex = i),
         type: BottomNavigationBarType.fixed,
         items: [
           BottomNavigationBarItem(
