@@ -2,8 +2,12 @@
 class AppAssets {
   // Фони
   static const String bgTavern        = 'assets/images/bg_tavern.jpg';
-  static const String bgParchment     = 'assets/images/bg_tavern.jpg'; // fallback на основний фон
-  static const String bgParchmentDark = 'assets/images/bg_tavern.jpg'; // fallback
+  static const String bgParchment     = 'assets/images/bg_parchment.jpg';
+  static const String bgParchmentDark = 'assets/images/bg_parchment_dark.jpg';
+  static const String bgParchmentV1Light = 'assets/images/bg_parchment_v1_light.jpg';
+  static const String bgParchmentV2Sand  = 'assets/images/bg_parchment_v2_sand.jpg';
+  static const String bgParchmentV3Warm  = 'assets/images/bg_parchment_v3_warm.jpg';
+  static const String bgParchmentV4Dark  = 'assets/images/bg_parchment_v4_dark.jpg';
 
   // Крила
   static const String wingDemon = 'assets/images/wing_demon.png';

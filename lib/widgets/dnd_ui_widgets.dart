@@ -70,10 +70,8 @@ class _ParchmentBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Спробуй завантажити текстуру. Якщо ассет ще не доданий —
-    // покаже красивий кодовий фон як fallback.
     return _ImageWithFallback(
-      imagePath: AppAssets.bgParchment,
+      imagePath: AppAssets.bgParchmentV1Light,
       fallback: _CodeParchment(),
     );
   }
@@ -93,7 +91,7 @@ class _ImageWithFallback extends StatelessWidget {
     return Image.asset(
       imagePath,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => fallback,
+      errorBuilder: (_, _, _) => fallback,
     );
   }
 }
@@ -350,7 +348,7 @@ class _WingImage extends StatelessWidget {
       height: size,
       fit: BoxFit.contain,
       alignment: alignment,
-      errorBuilder: (_, __, ___) => SizedBox(
+      errorBuilder: (_, _, _) => SizedBox(
         width: size * 0.6,
         height: size,
         child: CustomPaint(painter: _FallbackWingPainter()),
@@ -489,6 +487,7 @@ class DndParchmentBox extends StatelessWidget {
         image: DecorationImage(
           image: const AssetImage(AppAssets.bgParchment),
           fit: BoxFit.cover,
+          onError: (_, _) {},
         ),
         color: const Color(0xFFE8D9BC), // fallback колір
         borderRadius: BorderRadius.circular(borderRadius),

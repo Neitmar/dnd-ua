@@ -25,6 +25,7 @@ class DndApp extends StatelessWidget {
           seedColor: const Color(0xFF7B2D8B),
           brightness: Brightness.dark,
         ),
+        fontFamily: 'Cinzel',
         useMaterial3: true,
       ),
       home: const MainScreen(),

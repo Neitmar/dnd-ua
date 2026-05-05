@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../constants/app_assets.dart';
 import '../providers/app_state.dart';
 import '../services/localization_service.dart';
 import '../widgets/settings_dialog.dart';
@@ -58,6 +59,23 @@ extension ItemCategoryExtension on ItemCategory {
         return Colors.purple.shade300;
       case ItemCategory.accessory:
         return Colors.cyan.shade300;
+    }
+  }
+
+  String get imagePath {
+    switch (this) {
+      case ItemCategory.potion:
+        return AppAssets.invPotion;
+      case ItemCategory.armor:
+        return AppAssets.invArmor;
+      case ItemCategory.weapon:
+        return AppAssets.invWeapon;
+      case ItemCategory.useful:
+        return AppAssets.invUseful;
+      case ItemCategory.quest:
+        return AppAssets.invQuest;
+      case ItemCategory.accessory:
+        return AppAssets.invAccessories;
     }
   }
 }
@@ -230,7 +248,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? cat.color.withOpacity(0.2)
+                              ? cat.color.withAlpha((0.2 * 255).round())
                               : Colors.transparent,
                           border: Border.all(
                             color: isSelected ? cat.color : Colors.grey,
@@ -256,7 +274,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 if (_getSubcategories(selectedCategory).isNotEmpty) ...[
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value:
+                    initialValue:
                         _getSubcategories(
                           selectedCategory,
                         ).any((s) => s['key'] == selectedSubcategory)
@@ -443,24 +461,28 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   state.copper,
                   Colors.brown.shade400,
                   (v) => state.update(() => state.copper = v),
+                  AppAssets.coinCopper,
                 ),
                 _buildCoin(
                   'СД',
                   state.silver,
                   Colors.grey.shade400,
                   (v) => state.update(() => state.silver = v),
+                  AppAssets.coinSilver,
                 ),
                 _buildCoin(
                   'ЗД',
                   state.gold,
                   Colors.amber.shade400,
                   (v) => state.update(() => state.gold = v),
+                  AppAssets.coinGold,
                 ),
                 _buildCoin(
                   'ПД',
                   state.platinum,
                   Colors.cyan.shade300,
                   (v) => state.update(() => state.platinum = v),
+                  AppAssets.coinPlatinum,
                 ),
               ],
             ),
@@ -475,19 +497,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
     int value,
     Color color,
     Function(int) onChanged,
+    String iconPath,
   ) {
     final controller = TextEditingController(text: value.toString());
     return Column(
       children: [
-        CircleAvatar(
-          backgroundColor: color,
-          radius: 20,
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+        Image.asset(
+          iconPath,
+          width: 40,
+          height: 40,
+          errorBuilder: (_, _, _) => CircleAvatar(
+            backgroundColor: color,
+            radius: 20,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
           ),
         ),
@@ -596,9 +624,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
     IconData icon, {
     Color? color,
     VoidCallback? onTap,
+    String? imagePath,
   }) {
     final isSelected = _selectedCategory == cat;
     final chipColor = color ?? Colors.grey;
+    final iconColor = isSelected ? chipColor : Colors.grey;
+    final leadingIcon = imagePath != null
+        ? Image.asset(
+            imagePath,
+            width: 16,
+            height: 16,
+            color: iconColor,
+            colorBlendMode: BlendMode.srcIn,
+            errorBuilder: (_, _, _) => Icon(icon, size: 14, color: iconColor),
+          )
+        : Icon(icon, size: 14, color: iconColor);
     return GestureDetector(
       onTap:
           onTap ??
@@ -613,7 +653,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? chipColor.withOpacity(0.2) : Colors.transparent,
+          color: isSelected ? chipColor.withAlpha((0.2 * 255).round()) : Colors.transparent,
           border: Border.all(
             color: isSelected ? chipColor : Colors.grey.shade700,
             width: isSelected ? 1.5 : 0.5,
@@ -623,7 +663,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: isSelected ? chipColor : Colors.grey),
+            leadingIcon,
             const SizedBox(width: 4),
             Text(
               label,
@@ -711,7 +751,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ),
                     child: CircleAvatar(
                       backgroundColor: isEquipped
-                          ? cat.color.withOpacity(0.3)
+                          ? cat.color.withAlpha((0.3 * 255).round())
                           : Colors.grey.shade800,
                       child: Icon(
                         cat.icon,
@@ -735,7 +775,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: cat.color.withOpacity(0.2),
+                            color: cat.color.withAlpha((0.2 * 255).round()),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../constants/app_assets.dart';
 import '../providers/app_state.dart';
 import '../services/localization_service.dart';
 import '../widgets/dnd_ui_widgets.dart';
@@ -46,37 +47,50 @@ class _MainScreenState extends State<MainScreen> {
         type: BottomNavigationBarType.fixed,
         items: [
           BottomNavigationBarItem(
-            icon: const Icon(Icons.person_outline),
-            activeIcon: const Icon(Icons.person),
+            icon: _NavIcon(AppAssets.navCharacter),
+            activeIcon: _NavIcon(AppAssets.navCharacterActive),
             label: tr(context, 'character'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.shield_moon_outlined),
-            activeIcon: const Icon(Icons.shield_moon),
+            icon: _NavIcon(AppAssets.navArmory),
+            activeIcon: _NavIcon(AppAssets.navArmoryActive),
             label: tr(context, 'armory'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.shield_outlined),
-            activeIcon: const Icon(Icons.shield),
+            icon: _NavIcon(AppAssets.navCombat),
+            activeIcon: _NavIcon(AppAssets.navCombatActive),
             label: tr(context, 'combat'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.auto_awesome_outlined),
-            activeIcon: const Icon(Icons.auto_awesome),
+            icon: _NavIcon(AppAssets.navSpells),
+            activeIcon: _NavIcon(AppAssets.navSpellsActive),
             label: tr(context, 'spells'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.backpack_outlined),
-            activeIcon: const Icon(Icons.backpack),
+            icon: _NavIcon(AppAssets.navInventory),
+            activeIcon: _NavIcon(AppAssets.navInventoryActive),
             label: tr(context, 'inventory'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.casino_outlined),
-            activeIcon: const Icon(Icons.casino),
+            icon: _NavIcon(AppAssets.navDice),
+            activeIcon: _NavIcon(AppAssets.navDiceActive),
             label: tr(context, 'dice'),
           ),
         ],
       ),
     );
   }
+}
+
+class _NavIcon extends StatelessWidget {
+  final String path;
+  const _NavIcon(this.path);
+
+  @override
+  Widget build(BuildContext context) => Image.asset(
+        path,
+        width: 24,
+        height: 24,
+        errorBuilder: (_, _, _) => const SizedBox(width: 24, height: 24),
+      );
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../constants/app_assets.dart';
 import '../providers/app_state.dart';
 
 class TavernScreen extends StatelessWidget {
@@ -58,7 +59,11 @@ Widget build(BuildContext context) {
     body: Stack(
       children: [
         SizedBox.expand(
-          child: CustomPaint(painter: _TavernPainter()),
+          child: Image.asset(
+            AppAssets.bgTavern,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => CustomPaint(painter: _TavernPainter()),
+          ),
         ),
         Positioned(
           bottom: 0, left: 0, right: 0, height: 400,
