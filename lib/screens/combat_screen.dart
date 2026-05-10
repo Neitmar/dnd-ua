@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
-import '../services/localization_service.dart';
-import '../widgets/settings_dialog.dart';
+import '../constants/design_tokens.dart';
 
 const List<Map<String, dynamic>> _allConditions = [
   {
@@ -125,26 +124,19 @@ class _CombatScreenState extends State<CombatScreen> {
       }
     });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(tr(context, 'combat')),
-        centerTitle: true,
-        actions: settingsAction(context),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHpPanel(state),
-            const SizedBox(height: 16),
-            _buildCombatStats(context, state),
-            const SizedBox(height: 16),
-            _buildWeapons(context, state),
-            const SizedBox(height: 16),
-            _buildConditions(context, state),
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHpPanel(state),
+          const SizedBox(height: 16),
+          _buildCombatStats(context, state),
+          const SizedBox(height: 16),
+          _buildWeapons(context, state),
+          const SizedBox(height: 16),
+          _buildConditions(context, state),
+        ],
       ),
     );
   }
@@ -215,11 +207,11 @@ class _CombatScreenState extends State<CombatScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.info_outline, size: 14, color: Colors.grey.shade500),
+                Icon(Icons.info_outline, size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                 const SizedBox(width: 6),
                 Text(
                   'Бонус майстерності: +$profBonus',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                  style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                 ),
               ],
             ),
@@ -231,7 +223,9 @@ class _CombatScreenState extends State<CombatScreen> {
 
   Widget _buildHpPanel(AppState state) {
     return Card(
-      color: const Color(0xFF1F1A15),
+      color: Theme.of(context).brightness == Brightness.light
+          ? const Color(0xFF2A1508)
+          : const Color(0xFF1F1A15),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -408,7 +402,7 @@ class _CombatScreenState extends State<CombatScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+          style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
         ),
         const SizedBox(height: 4),
         Text(
@@ -418,7 +412,7 @@ class _CombatScreenState extends State<CombatScreen> {
         if (hint != null)
           Text(
             hint,
-            style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+            style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
           ),
         if (!readOnly) ...[
           const SizedBox(height: 4),
@@ -432,7 +426,7 @@ class _CombatScreenState extends State<CombatScreen> {
                   child: Icon(
                     Icons.remove,
                     size: 18,
-                    color: value > min ? null : Colors.grey.shade700,
+                    color: value > min ? null : Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
                   ),
                 ),
               ),
@@ -443,7 +437,7 @@ class _CombatScreenState extends State<CombatScreen> {
                   child: Icon(
                     Icons.add,
                     size: 18,
-                    color: value < max ? null : Colors.grey.shade700,
+                    color: value < max ? null : Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
                   ),
                 ),
               ),
@@ -470,7 +464,7 @@ class _CombatScreenState extends State<CombatScreen> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 'Немає зброї. Натисни + щоб додати.',
-                style: TextStyle(color: Colors.grey.shade500),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
               ),
             ),
           )
@@ -548,14 +542,14 @@ class _CombatScreenState extends State<CombatScreen> {
                   ),
                   Text(
                     'Атака: $attackStr · ${weapon['damage'] ?? ''} ${weapon['damageType'] ?? ''}',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                   ),
                   if ((weapon['notes'] ?? '').isNotEmpty)
                     Text(
                       weapon['notes'],
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade500,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                 ],
@@ -610,7 +604,7 @@ class _CombatScreenState extends State<CombatScreen> {
             ),
             Text(
               'd20($roll) ${bonus >= 0 ? '+' : ''}$bonus',
-              style: TextStyle(color: Colors.grey.shade400),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
             ),
             if (isCrit)
               const Text(
@@ -708,12 +702,11 @@ class _CombatScreenState extends State<CombatScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: alreadyAdded
-                                ? Colors.grey.shade800
-                                : Theme.of(context).colorScheme.primaryContainer
-                                      .withOpacity(0.3),
+                                ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)
+                                : Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                             border: Border.all(
                               color: alreadyAdded
-                                  ? Colors.grey.shade700
+                                  ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.4)
                                   : Theme.of(context).colorScheme.primary,
                               width: 0.5,
                             ),
@@ -724,7 +717,7 @@ class _CombatScreenState extends State<CombatScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               color: alreadyAdded
-                                  ? Colors.grey.shade600
+                                  ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)
                                   : Theme.of(context).colorScheme.primary,
                             ),
                           ),
@@ -735,9 +728,9 @@ class _CombatScreenState extends State<CombatScreen> {
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Нова зброя',
-                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -915,13 +908,19 @@ class _CombatScreenState extends State<CombatScreen> {
   // --- Стани ---
   Widget _buildConditions(BuildContext context, AppState state) {
     final active = state.combatConditions;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Стани',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            shadows: DesignTokens.getTextShadow(Theme.of(context).brightness),
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -950,13 +949,13 @@ class _CombatScreenState extends State<CombatScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                      ? cs.primary.withValues(alpha: 0.2)
                       : Colors.transparent,
                   border: Border.all(
                     color: isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey.shade700,
-                    width: isActive ? 1.5 : 0.5,
+                        ? cs.primary
+                        : cs.outline.withValues(alpha: isDark ? 0.7 : 0.9),
+                    width: isActive ? 1.5 : 1.0,
                   ),
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -965,9 +964,10 @@ class _CombatScreenState extends State<CombatScreen> {
                   style: TextStyle(
                     fontSize: 13,
                     color: isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey.shade400,
-                    fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+                        ? cs.primary
+                        : cs.onSurface.withValues(alpha: isDark ? 0.85 : 0.9),
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                    shadows: !isActive && isDark ? DesignTokens.darkTextShadow : null,
                   ),
                 ),
               ),
@@ -979,7 +979,7 @@ class _CombatScreenState extends State<CombatScreen> {
           ...active.map(
             (cond) => Card(
               margin: const EdgeInsets.only(bottom: 6),
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               child: ListTile(
                 dense: true,
                 leading: Text(
@@ -992,7 +992,7 @@ class _CombatScreenState extends State<CombatScreen> {
                 ),
                 subtitle: Text(
                   cond['desc'] ?? '',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.close, size: 16),

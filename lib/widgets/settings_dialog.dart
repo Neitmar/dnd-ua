@@ -39,6 +39,20 @@ class SettingsDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
+              tr(context, 'theme'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: state.isLightTheme,
+              activeThumbColor: Theme.of(context).colorScheme.primary,
+              title: Text(tr(context, state.isLightTheme ? 'light_theme' : 'dark_theme')),
+              subtitle: Text(tr(context, 'theme_description')),
+              onChanged: state.setThemeMode,
+            ),
+            const SizedBox(height: 18),
+            Text(
               tr(context, 'language'),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/app_state.dart';
-import '../services/localization_service.dart';
-import '../widgets/settings_dialog.dart';
+import '../constants/design_tokens.dart';
 
 class ArmoryScreen extends StatelessWidget {
   const ArmoryScreen({super.key});
@@ -196,10 +195,13 @@ class ArmoryScreen extends StatelessWidget {
       slotKey,
     ).toSet();
 
+    final sheetBg = Theme.of(context).colorScheme.surface;
+    final sheetSecondary = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1A0A2E),
+      backgroundColor: sheetBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -231,16 +233,16 @@ class ArmoryScreen extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Обрано ${selectedRings.length}/$_maxRingsPerHand',
-                          style: TextStyle(color: Colors.grey.shade400),
+                          style: TextStyle(color: sheetSecondary),
                         ),
                       ),
                     ),
                   if (items.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(32),
+                    Padding(
+                      padding: const EdgeInsets.all(32),
                       child: Text(
                         'Немає підходящих предметів в інвентарі',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: sheetSecondary),
                         textAlign: TextAlign.center,
                       ),
                     )
@@ -350,6 +352,7 @@ class ArmoryScreen extends StatelessWidget {
     final item = state.equipment[slotKey];
     final isEquipped = item != null;
     final isBlocked = _isSlotBlocked(state, slotKey);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () => _showSlotPicker(context, state, slotKey),
@@ -358,16 +361,16 @@ class ArmoryScreen extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           color: isBlocked
-              ? Colors.red.withOpacity(0.14)
+              ? Colors.red.withValues(alpha: 0.14)
               : isEquipped
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
-              : Colors.black.withOpacity(0.3),
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
           border: Border.all(
             color: isBlocked
-                ? Colors.red.withOpacity(0.5)
+                ? Colors.red.withValues(alpha: 0.5)
                 : isEquipped
                 ? Theme.of(context).colorScheme.primary
-                : Colors.amber.withOpacity(0.4),
+                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
             width: isEquipped ? 1.5 : 0.5,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -378,9 +381,10 @@ class ArmoryScreen extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 9,
-                color: Colors.amber.withOpacity(0.7),
-                fontWeight: FontWeight.w500,
+                fontSize: 10,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w600,
+                shadows: isDark ? DesignTokens.darkTextShadow : null,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -403,17 +407,22 @@ class ArmoryScreen extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 _slotItemLabel(slotKey, item),
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.white,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
+                  shadows: isDark ? DesignTokens.darkTextShadow : null,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ] else
-              Icon(Icons.add, size: 14, color: Colors.amber.withOpacity(0.4)),
+              Icon(
+                Icons.add,
+                size: 14,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
           ],
         ),
       ),
@@ -426,13 +435,7 @@ class ArmoryScreen extends StatelessWidget {
     final screenW = MediaQuery.of(context).size.width;
     final slotW = (screenW - 48) / 3 - 4;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(tr(context, 'armory')),
-        centerTitle: true,
-        actions: settingsAction(context),
-      ),
-      body: SingleChildScrollView(
+    return SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -612,7 +615,6 @@ class ArmoryScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

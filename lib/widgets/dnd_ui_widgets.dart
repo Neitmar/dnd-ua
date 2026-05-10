@@ -3,14 +3,16 @@
 //  Файл: lib/widgets/dnd_ui_widgets.dart
 //
 //  Містить:
-//   1. DndScaffold      — базовий scaffold з пергаментним фоном
-//   2. DndPageHeader    — заголовок з крилами янгола/демона
-//   3. DndParchmentBox  — картка-пергамент для контенту
-//   4. AppBackground    — статичний пергаментний фон (до завантаження текстури)
+//   1. DndScaffold  — базовий scaffold з пергаментним фоном
+//   2. DndAppBar    — централізований хедер (крила + назва + шестерня)
 // ═══════════════════════════════════════════════════════════════════
+
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import '../constants/app_assets.dart';
+import '../constants/design_tokens.dart';
+import 'settings_dialog.dart';
 
 // ───────────────────────────────────────────────────────────────────
 //  1. DndScaffold
@@ -51,8 +53,12 @@ class DndScaffold extends StatelessWidget {
         children: [
           // ── Пергаментний фон ──
           const _ParchmentBackground(),
-          // ── Темний оверлей для читабельності (налаштуй opacity) ──
-          Container(color: const Color(0x55000000)),
+          // ── Оверлей для читабельності залежно від теми ──
+          Container(
+            color: Theme.of(context).brightness == Brightness.light
+                ? const Color(0x1AFFFFFF)
+                : const Color(0x33000000),
+          ),
           // ── Контент ──
           body,
         ],
@@ -70,8 +76,11 @@ class _ParchmentBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
     return _ImageWithFallback(
-      imagePath: AppAssets.bgParchmentV1Light,
+      imagePath: isLight
+          ? AppAssets.bgParchmentV2Sand
+          : AppAssets.bgParchmentV4Dark,
       fallback: _CodeParchment(),
     );
   }
@@ -163,391 +172,113 @@ class _ParchmentPainter extends CustomPainter {
 }
 
 // ───────────────────────────────────────────────────────────────────
-//  2. DndPageHeader — заголовок з крилами
-//
-//  Використання:
-//    DndPageHeader(title: 'ПЕРСОНАЖ')
-//    DndPageHeader(title: 'ІНВЕНТАР', subtitle: 'Спорядження героя')
-//    DndPageHeader(title: 'КУБИКИ', showWings: false) // без крил
+//  2. DndAppBar — централізований хедер (крила + назва + шестерня)
+//  Як у React chrome.jsx: один компонент на весь застосунок.
+//  Використання: DndScaffold(appBar: DndAppBar(title: 'ПЕРСОНАЖ'), ...)
 // ───────────────────────────────────────────────────────────────────
-class DndPageHeader extends StatefulWidget {
+class DndAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final String? subtitle;
-  final bool showWings;
-  final double wingSize;
-  final Color titleColor;
 
-  const DndPageHeader({
-    super.key,
-    required this.title,
-    this.subtitle,
-    this.showWings = true,
-    this.wingSize = 52,
-    this.titleColor = const Color(0xFFC9A961),
-  });
+  const DndAppBar({super.key, required this.title});
 
   @override
-  State<DndPageHeader> createState() => _DndPageHeaderState();
-}
-
-class _DndPageHeaderState extends State<DndPageHeader>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnim;
-  late Animation<double> _wingAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    )..forward();
-
-    _fadeAnim = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    );
-
-    _wingAnim = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.2, 1.0, curve: Curves.elasticOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  Size get preferredSize => const Size.fromHeight(56);
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return FadeTransition(
-          opacity: _fadeAnim,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Верхній орнаментальний роздільник ──
-              _OrnamentDivider(),
-              const SizedBox(height: 8),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final wingPath = isDark ? AppAssets.wingDemonClean : AppAssets.wingAngelClean;
+    final textColor = isDark ? DesignTokens.darkText : DesignTokens.lightText;
+    final borderColor = isDark ? DesignTokens.darkBorderSoft : DesignTokens.lightBorderSoft;
 
-              // ── Рядок з крилами та заголовком ──
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Крило демона (ліве)
-                  if (widget.showWings)
-                    Transform.scale(
-                      scale: _wingAnim.value.clamp(0.0, 1.0),
-                      alignment: Alignment.centerRight,
-                      child: Transform.scale(
-                        scaleX: -1, // дзеркало для лівого крила
-                        child: _WingImage(
-                          path: AppAssets.wingDemon,
-                          size: widget.wingSize,
-                          alignment: Alignment.centerRight,
-                        ),
-                      ),
-                    ),
-
-                  if (widget.showWings) const SizedBox(width: 10),
-
-                  // ── Текст заголовку ──
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        widget.title,
-                        style: TextStyle(
-                          fontFamily: 'Cinzel',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: widget.titleColor,
-                          letterSpacing: 3,
-                          shadows: const [
-                            Shadow(
-                              color: Color(0xAA000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                            Shadow(
-                              color: Color(0x44C9A961),
-                              blurRadius: 16,
-                              offset: Offset(0, 0),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (widget.subtitle != null) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          widget.subtitle!,
-                          style: const TextStyle(
-                            fontFamily: 'Cinzel',
-                            fontSize: 10,
-                            color: Color(0xFF9E8A6A),
-                            letterSpacing: 2,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-
-                  if (widget.showWings) const SizedBox(width: 10),
-
-                  // Крило янгола (праве)
-                  if (widget.showWings)
-                    Transform.scale(
-                      scale: _wingAnim.value.clamp(0.0, 1.0),
-                      alignment: Alignment.centerLeft,
-                      child: _WingImage(
-                        path: AppAssets.wingAngel,
-                        size: widget.wingSize,
-                        alignment: Alignment.centerLeft,
-                      ),
-                    ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-              // ── Нижній орнаментальний роздільник ──
-              _OrnamentDivider(),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ───────────────────────────────────────────────────────────────────
-//  Крило — зображення з graceful fallback
-// ───────────────────────────────────────────────────────────────────
-class _WingImage extends StatelessWidget {
-  final String path;
-  final double size;
-  final Alignment alignment;
-
-  const _WingImage({
-    required this.path,
-    required this.size,
-    required this.alignment,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      path,
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-      alignment: alignment,
-      errorBuilder: (_, _, _) => SizedBox(
-        width: size * 0.6,
-        height: size,
-        child: CustomPaint(painter: _FallbackWingPainter()),
-      ),
-    );
-  }
-}
-
-// Кодове крило якщо ассет не завантажений
-class _FallbackWingPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0x88C9A961)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    final path = Path()
-      ..moveTo(size.width, size.height * 0.5)
-      ..quadraticBezierTo(0, 0, size.width * 0.1, size.height * 0.3)
-      ..quadraticBezierTo(size.width * 0.5, size.height * 0.2, size.width, size.height * 0.5)
-      ..quadraticBezierTo(size.width * 0.5, size.height * 0.8, size.width * 0.1, size.height * 0.7)
-      ..quadraticBezierTo(0, size.height, size.width, size.height * 0.5);
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(_FallbackWingPainter old) => false;
-}
-
-// ───────────────────────────────────────────────────────────────────
-//  Орнаментальний роздільник
-// ───────────────────────────────────────────────────────────────────
-class _OrnamentDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(double.infinity, 12),
-      painter: _DividerPainter(),
-    );
-  }
-}
-
-class _DividerPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-
-    final linePaint = Paint()
-      ..color = const Color(0xFFC9A961)
-      ..strokeWidth = 0.8;
-
-    // Ліва лінія
-    canvas.drawLine(
-      Offset(20, cy),
-      Offset(cx - 24, cy),
-      linePaint,
-    );
-    // Права лінія
-    canvas.drawLine(
-      Offset(cx + 24, cy),
-      Offset(size.width - 20, cy),
-      linePaint,
-    );
-
-    // Центральний ромб
-    final diamondPaint = Paint()
-      ..color = const Color(0xFFC9A961)
-      ..style = PaintingStyle.fill;
-
-    final diamond = Path()
-      ..moveTo(cx, cy - 5)
-      ..lineTo(cx + 5, cy)
-      ..lineTo(cx, cy + 5)
-      ..lineTo(cx - 5, cy)
-      ..close();
-    canvas.drawPath(diamond, diamondPaint);
-
-    // Маленькі бічні ромбики
-    for (final offset in [-14.0, 14.0]) {
-      final smallDiamond = Path()
-        ..moveTo(cx + offset, cy - 3)
-        ..lineTo(cx + offset + 3, cy)
-        ..lineTo(cx + offset, cy + 3)
-        ..lineTo(cx + offset - 3, cy)
-        ..close();
-      canvas.drawPath(
-        smallDiamond,
-        Paint()
-          ..color = const Color(0xAAC9A961)
-          ..style = PaintingStyle.fill,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DividerPainter old) => false;
-}
-
-// ───────────────────────────────────────────────────────────────────
-//  3. DndParchmentBox — картка з пергаментним фоном
-//
-//  Використання:
-//    DndParchmentBox(
-//      child: YourContent(),
-//    )
-//    DndParchmentBox(
-//      padding: EdgeInsets.all(20),
-//      child: YourContent(),
-//    )
-// ───────────────────────────────────────────────────────────────────
-class DndParchmentBox extends StatelessWidget {
-  final Widget child;
-  final EdgeInsetsGeometry padding;
-  final double? width;
-  final double borderRadius;
-
-  const DndParchmentBox({
-    super.key,
-    required this.child,
-    this.padding = const EdgeInsets.all(16),
-    this.width,
-    this.borderRadius = 8,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      width: width,
-      padding: padding,
+      height: preferredSize.height,
       decoration: BoxDecoration(
-        // Якщо є текстура пергаменту — використовуємо DecorationImage
-        // Якщо ні — красивий кодовий градієнт
-        image: DecorationImage(
-          image: const AssetImage(AppAssets.bgParchment),
-          fit: BoxFit.cover,
-          onError: (_, _) {},
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isDark
+              ? [DesignTokens.darkBgElev, DesignTokens.darkBg]
+              : [DesignTokens.lightBgElev, DesignTokens.lightBg],
         ),
-        color: const Color(0xFFE8D9BC), // fallback колір
-        borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: const Color(0xFFC9A961),
-          width: 1.2,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x66000000),
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
-          BoxShadow(
-            color: Color(0x22C9A961),
-            blurRadius: 4,
-            spreadRadius: -1,
-          ),
-        ],
+        border: Border(bottom: BorderSide(color: borderColor)),
       ),
-      child: child,
+      child: SafeArea(
+        bottom: false,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Центр: ліве крило (дзеркало) + назва + праве крило
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Transform.scale(
+                  scaleX: -1,
+                  child: _WingIcon(path: wingPath),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: DesignTokens.fontDeco,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: DesignTokens.letterSpacingDeco,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _WingIcon(path: wingPath),
+              ],
+            ),
+            // Права кнопка — шестерня налаштувань
+            Positioned(
+              right: 4,
+              child: IconButton(
+                icon: Icon(
+                  Icons.settings,
+                  color: isDark ? DesignTokens.darkAccent : DesignTokens.lightAccent,
+                  size: 22,
+                ),
+                tooltip: 'Налаштування',
+                onPressed: () => showSettingsDialog(context),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-// ───────────────────────────────────────────────────────────────────
-//  ПРИКЛАД використання на екрані:
-// ───────────────────────────────────────────────────────────────────
-//
-//  class CharacterScreen extends StatelessWidget {
-//    @override
-//    Widget build(BuildContext context) {
-//      return DndScaffold(
-//        body: ListView(
-//          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-//          children: [
-//
-//            DndPageHeader(
-//              title: 'ПЕРСОНАЖ',
-//              subtitle: 'Аркуш пригодника',
-//            ),
-//
-//            const SizedBox(height: 16),
-//
-//            DndParchmentBox(
-//              child: Column(
-//                children: [
-//                  // Ім'я, клас, раса...
-//                ],
-//              ),
-//            ),
-//
-//          ],
-//        ),
-//      );
-//    }
-//  }
-//
-// ───────────────────────────────────────────────────────────────────
+class _WingIcon extends StatelessWidget {
+  final String path;
+  const _WingIcon({required this.path});
 
-// ───────────────────────────────────────────────────────────────────
-//  Додати в AppAssets (lib/constants/app_assets.dart):
-// ───────────────────────────────────────────────────────────────────
+  Widget _layer(String path, double blur, Color color) => ImageFiltered(
+        imageFilter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: ColorFiltered(
+          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          child: Image.asset(path, width: 46, height: 36, fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => const SizedBox(width: 10)),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? const Color(0xFFDC2828) : const Color(0xFF1A0A05);
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        _layer(path, 5.0, base.withValues(alpha: isDark ? 0.45 : 0.35)),
+        _layer(path, 2.0, base.withValues(alpha: isDark ? 0.70 : 0.55)),
+        _layer(path, 0.5, base.withValues(alpha: isDark ? 0.95 : 1.00)),
+        Image.asset(path, width: 46, height: 36, fit: BoxFit.contain,
+            errorBuilder: (_, _, _) => const SizedBox(width: 10)),
+      ],
+    );
+  }
+}

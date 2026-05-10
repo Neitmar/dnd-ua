@@ -1,0 +1,14 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Silver square -->
+  <rect x="10" y="10" width="80" height="80" fill="#C0C0C0" stroke="#4A4A4A" stroke-width="2.5" rx="4"/>
+  <!-- Falcon: head -->
+  <ellipse cx="50" cy="30" rx="8" ry="9" fill="#3A3A3A"/>
+  <!-- Beak -->
+  <path d="M56 32 L64 36 L56 39 Z" fill="#3A3A3A"/>
+  <!-- Left wing -->
+  <path d="M42 44 C36 36 18 40 12 33 L15 46 C24 50 38 50 43 56 Z" fill="#3A3A3A"/>
+  <!-- Right wing -->
+  <path d="M58 44 C64 36 82 40 88 33 L85 46 C76 50 62 50 57 56 Z" fill="#3A3A3A"/>
+  <!-- Body + tail -->
+  <path d="M43 48 L50 45 L57 48 L55 72 L50 78 L45 72 Z" fill="#3A3A3A"/>
+</svg>

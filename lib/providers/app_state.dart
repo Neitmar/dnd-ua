@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,9 +6,31 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppState extends ChangeNotifier {
   static const _key = 'app_state';
   static const _onboardingKey = 'onboarding_done';
+  static const Map<String, int> _defaultStats = {
+    'Сила': 10,
+    'Спритність': 10,
+    'Статура': 10,
+    'Інтелект': 10,
+    'Мудрість': 10,
+    'Харизма': 10,
+  };
+  static const Map<int, int> _defaultSpellSlots = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+    6: 0,
+    7: 0,
+    8: 0,
+    9: 0,
+  };
+
+  Future<void> _saveQueue = Future.value();
 
   bool onboardingDone = false;
   String languageCode = 'uk';
+  bool isLightTheme = false;
 
   Future<void> checkOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
@@ -28,14 +51,7 @@ class AppState extends ChangeNotifier {
   String race = 'Людина';
   int level = 1;
 
-  Map<String, int> stats = {
-    'Сила': 10,
-    'Спритність': 10,
-    'Статура': 10,
-    'Інтелект': 10,
-    'Мудрість': 10,
-    'Харизма': 10,
-  };
+  Map<String, int> stats = Map<String, int>.from(_defaultStats);
 
   int maxHp = 10;
   int currentHp = 10;
@@ -56,6 +72,7 @@ class AppState extends ChangeNotifier {
   List<Map<String, dynamic>> inventory = [];
   int copper = 0;
   int silver = 0;
+  int electrum = 0;
   int gold = 0;
   int platinum = 0;
 
@@ -63,28 +80,8 @@ class AppState extends ChangeNotifier {
   String spellcastingAbility = 'Інтелект';
   List<Map<String, dynamic>> preparedSpells = [];
   List<Map<String, dynamic>> knownSpells = [];
-  Map<int, int> spellSlots = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-    6: 0,
-    7: 0,
-    8: 0,
-    9: 0,
-  };
-  Map<int, int> usedSpellSlots = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-    6: 0,
-    7: 0,
-    8: 0,
-    9: 0,
-  };
+  Map<int, int> spellSlots = Map<int, int>.from(_defaultSpellSlots);
+  Map<int, int> usedSpellSlots = Map<int, int>.from(_defaultSpellSlots);
 
   // --- Екіпіровка (Арморі) ---
   Map<String, String?> equipment = {
@@ -397,115 +394,185 @@ class AppState extends ChangeNotifier {
     final json = prefs.getString(_key);
     if (json == null) return;
 
-    final data = jsonDecode(json);
+    Map<String, dynamic> data;
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is! Map) {
+        debugPrint('AppState.load: invalid persisted payload type.');
+        return;
+      }
+      data = Map<String, dynamic>.from(decoded);
+    } catch (e) {
+      debugPrint('AppState.load: failed to decode persisted state: $e');
+      return;
+    }
 
-    name = data['name'] ?? 'Новий герой';
-    gender = data['gender'] ?? 'male';
-    characterClass = data['characterClass'] ?? 'Воїн';
-    languageCode = data['languageCode'] ?? 'uk';
-    race = data['race'] ?? 'Людина';
-    level = data['level'] ?? 1;
-    stats = Map<String, int>.from(data['stats'] ?? {});
-    maxHp = data['maxHp'] ?? 10;
-    currentHp = data['currentHp'] ?? 10;
-    tempHp = data['tempHp'] ?? 0;
-    deathSuccesses = data['deathSuccesses'] ?? 0;
-    deathFailures = data['deathFailures'] ?? 0;
-    proficientSkills = Set<String>.from(data['proficientSkills'] ?? []);
-    expertiseSkills = Set<String>.from(data['expertiseSkills'] ?? []);
-    armorClass = data['armorClass'] ?? 10;
-    initiative = data['initiative'] ?? 0;
-    speed = data['speed'] ?? 30;
-    weapons = List<Map<String, dynamic>>.from(
-      (data['weapons'] ?? []).map((i) => Map<String, dynamic>.from(i)),
+    name = _readString(data['name'], fallback: 'Новий герой');
+    gender = _readString(data['gender'], fallback: 'male');
+    characterClass = _readString(data['characterClass'], fallback: 'Воїн');
+    languageCode = _readString(data['languageCode'], fallback: 'uk');
+    race = _readString(data['race'], fallback: 'Людина');
+    isLightTheme = _readBool(data['isLightTheme']);
+    level = _readInt(data['level'], fallback: 1);
+    stats = _readStats(data['stats']);
+    maxHp = _readInt(data['maxHp'], fallback: 10);
+    currentHp = _readInt(data['currentHp'], fallback: 10);
+    tempHp = _readInt(data['tempHp'], fallback: 0);
+    deathSuccesses = _readInt(data['deathSuccesses'], fallback: 0);
+    deathFailures = _readInt(data['deathFailures'], fallback: 0);
+    proficientSkills = _readStringSet(data['proficientSkills']);
+    expertiseSkills = _readStringSet(data['expertiseSkills']);
+    armorClass = _readInt(data['armorClass'], fallback: 10);
+    initiative = _readInt(data['initiative'], fallback: 0);
+    speed = _readInt(data['speed'], fallback: 30);
+    weapons = _readMapList(data['weapons']);
+    combatConditions = _readMapList(data['combatConditions']);
+    inventory = _readMapList(data['inventory']);
+    copper = _readInt(data['copper'], fallback: 0);
+    silver = _readInt(data['silver'], fallback: 0);
+    electrum = _readInt(data['electrum'], fallback: 0);
+    gold = _readInt(data['gold'], fallback: 0);
+    platinum = _readInt(data['platinum'], fallback: 0);
+    spellcastingAbility = _readString(
+      data['spellcastingAbility'],
+      fallback: 'Інтелект',
     );
-    combatConditions = List<Map<String, dynamic>>.from(
-      (data['combatConditions'] ?? []).map((i) => Map<String, dynamic>.from(i)),
-    );
-    inventory = List<Map<String, dynamic>>.from(
-      (data['inventory'] ?? []).map((i) => Map<String, dynamic>.from(i)),
-    );
-    copper = data['copper'] ?? 0;
-    silver = data['silver'] ?? 0;
-    gold = data['gold'] ?? 0;
-    platinum = data['platinum'] ?? 0;
-    spellcastingAbility = data['spellcastingAbility'] ?? 'Інтелект';
-    preparedSpells = List<Map<String, dynamic>>.from(
-      (data['preparedSpells'] ?? []).map((i) => Map<String, dynamic>.from(i)),
-    );
-    knownSpells = List<Map<String, dynamic>>.from(
-      (data['knownSpells'] ?? []).map((i) => Map<String, dynamic>.from(i)),
-    );
-    spellSlots =
-        (data['spellSlots'] as Map?)?.map(
-          (k, v) => MapEntry(int.parse(k.toString()), v as int),
-        ) ??
-        {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0};
-    usedSpellSlots =
-        (data['usedSpellSlots'] as Map?)?.map(
-          (k, v) => MapEntry(int.parse(k.toString()), v as int),
-        ) ??
-        {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0};
-    equipment = Map<String, String?>.from(
-      (data['equipment'] as Map?)?.map(
-            (k, v) => MapEntry(k.toString(), v?.toString()),
-          ) ??
-          {},
-    );
+    preparedSpells = _readMapList(data['preparedSpells']);
+    knownSpells = _readMapList(data['knownSpells']);
+    spellSlots = _readSpellSlots(data['spellSlots']);
+    usedSpellSlots = _readSpellSlots(data['usedSpellSlots']);
+    equipment = _readEquipment(data['equipment']);
 
     notifyListeners();
   }
 
   // --- Збереження ---
   Future<void> save() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _key,
-      jsonEncode({
-        'name': name,
-        'gender': gender,
-        'languageCode': languageCode,
-        'characterClass': characterClass,
-        'race': race,
-        'level': level,
-        'stats': stats,
-        'maxHp': maxHp,
-        'currentHp': currentHp,
-        'tempHp': tempHp,
-        'deathSuccesses': deathSuccesses,
-        'deathFailures': deathFailures,
-        'proficientSkills': proficientSkills.toList(),
-        'expertiseSkills': expertiseSkills.toList(),
-        'inventory': inventory,
-        'armorClass': armorClass,
-        'initiative': initiative,
-        'speed': speed,
-        'weapons': weapons,
-        'combatConditions': combatConditions,
-        'copper': copper,
-        'silver': silver,
-        'gold': gold,
-        'platinum': platinum,
-        'spellcastingAbility': spellcastingAbility,
-        'preparedSpells': preparedSpells,
-        'knownSpells': knownSpells,
-        'spellSlots': spellSlots.map((k, v) => MapEntry(k.toString(), v)),
-        'usedSpellSlots': usedSpellSlots.map(
-          (k, v) => MapEntry(k.toString(), v),
-        ),
-        'equipment': equipment,
-      }),
-    );
+    final snapshot = _toJsonPayload();
+    _saveQueue =
+        _saveQueue
+            .catchError((_) {})
+            .then((_) => _persistSnapshot(snapshot));
+    await _saveQueue;
   }
 
   // --- Хелпери ---
   void update(VoidCallback fn) {
     fn();
     notifyListeners();
-    save();
+    unawaited(save());
   }
 
   void setLanguage(String code) {
     update(() => languageCode = code);
+  }
+
+  void setThemeMode(bool light) {
+    update(() => isLightTheme = light);
+  }
+
+  Future<void> _persistSnapshot(Map<String, dynamic> snapshot) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, jsonEncode(snapshot));
+  }
+
+  Map<String, dynamic> _toJsonPayload() {
+    return {
+      'name': name,
+      'gender': gender,
+      'languageCode': languageCode,
+      'characterClass': characterClass,
+      'race': race,
+      'level': level,
+      'stats': stats,
+      'maxHp': maxHp,
+      'currentHp': currentHp,
+      'tempHp': tempHp,
+      'deathSuccesses': deathSuccesses,
+      'deathFailures': deathFailures,
+      'proficientSkills': proficientSkills.toList(),
+      'expertiseSkills': expertiseSkills.toList(),
+      'inventory': inventory,
+      'armorClass': armorClass,
+      'initiative': initiative,
+      'speed': speed,
+      'weapons': weapons,
+      'combatConditions': combatConditions,
+      'copper': copper,
+      'silver': silver,
+      'electrum': electrum,
+      'gold': gold,
+      'platinum': platinum,
+      'spellcastingAbility': spellcastingAbility,
+      'preparedSpells': preparedSpells,
+      'knownSpells': knownSpells,
+      'spellSlots': spellSlots.map((k, v) => MapEntry(k.toString(), v)),
+      'usedSpellSlots': usedSpellSlots.map((k, v) => MapEntry(k.toString(), v)),
+      'equipment': equipment,
+      'isLightTheme': isLightTheme,
+    };
+  }
+
+  String _readString(dynamic value, {required String fallback}) {
+    final text = value?.toString().trim();
+    if (text == null || text.isEmpty) return fallback;
+    return text;
+  }
+
+  bool _readBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase() == 'true';
+    return false;
+  }
+
+  int _readInt(dynamic value, {required int fallback}) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? fallback;
+  }
+
+  Set<String> _readStringSet(dynamic value) {
+    if (value is! Iterable) return <String>{};
+    return value.map((item) => item.toString()).toSet();
+  }
+
+  List<Map<String, dynamic>> _readMapList(dynamic value) {
+    if (value is! Iterable) return <Map<String, dynamic>>[];
+    return value
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
+  Map<String, int> _readStats(dynamic value) {
+    final merged = Map<String, int>.from(_defaultStats);
+    if (value is! Map) return merged;
+    for (final entry in value.entries) {
+      final key = entry.key.toString();
+      final fallback = merged[key];
+      if (fallback == null) continue;
+      merged[key] = _readInt(entry.value, fallback: fallback);
+    }
+    return merged;
+  }
+
+  Map<int, int> _readSpellSlots(dynamic value) {
+    final slots = Map<int, int>.from(_defaultSpellSlots);
+    if (value is! Map) return slots;
+    for (final entry in value.entries) {
+      final key = int.tryParse(entry.key.toString());
+      if (key == null || key < 1 || key > 9) continue;
+      slots[key] = _readInt(entry.value, fallback: 0).clamp(0, 99);
+    }
+    return slots;
+  }
+
+  Map<String, String?> _readEquipment(dynamic value) {
+    final parsed = <String, String?>{};
+    if (value is! Map) return parsed;
+    for (final entry in value.entries) {
+      parsed[entry.key.toString()] = entry.value?.toString();
+    }
+    return parsed;
   }
 }

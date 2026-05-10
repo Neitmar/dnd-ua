@@ -166,19 +166,6 @@ ClassData? getClassData(String className) {
   );
 }
 
-bool isSpellcaster(String className) {
-  return getClassData(className)?.isSpellcaster ?? false;
-}
-
-String getSpellcastingAbility(String className) {
-  return getClassData(className)?.spellcastingAbility ?? 'Інтелект';
-}
-
-String getHitDie(String className) {
-  final hitDie = getClassData(className)?.hitDie ?? 8;
-  return 'd$hitDie';
-}
-
 int getStartingHp(String className, int conModifier) {
   final hitDie = getClassData(className)?.hitDie ?? 8;
   return hitDie + conModifier;

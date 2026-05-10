@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../data/default_spells.dart';
-import '../services/localization_service.dart';
-import '../widgets/settings_dialog.dart';
 
 class SpellsScreen extends StatefulWidget {
   const SpellsScreen({super.key});
@@ -15,6 +13,8 @@ class SpellsScreen extends StatefulWidget {
 class _SpellsScreenState extends State<SpellsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String? _lastNormalizedClass;
+  int? _lastNormalizedLevel;
 
   final List<String> _abilities = ['Інтелект', 'Мудрість', 'Харизма'];
 
@@ -233,19 +233,41 @@ class _SpellsScreenState extends State<SpellsScreen>
 
   void _normalizeUsedSpellSlots(AppState state) {
     final slots = _getSlotsForClass(state.characterClass, state.level);
+    var changed = false;
+
+    for (var i = 0; i < 9; i++) {
+      final slotLevel = i + 1;
+      final total = slots[i];
+      final used = state.usedSpellSlots[slotLevel] ?? 0;
+      final normalized = total <= 0 ? 0 : used.clamp(0, total);
+      if (normalized != used) {
+        changed = true;
+      }
+    }
+
+    if (!changed) return;
 
     state.update(() {
       for (var i = 0; i < 9; i++) {
         final slotLevel = i + 1;
         final total = slots[i];
         final used = state.usedSpellSlots[slotLevel] ?? 0;
-
-        if (total <= 0) {
-          state.usedSpellSlots[slotLevel] = 0;
-        } else {
-          state.usedSpellSlots[slotLevel] = used.clamp(0, total);
-        }
+        state.usedSpellSlots[slotLevel] = total <= 0 ? 0 : used.clamp(0, total);
       }
+    });
+  }
+
+  void _scheduleNormalizationIfNeeded(AppState state) {
+    final sameClass = _lastNormalizedClass == state.characterClass;
+    final sameLevel = _lastNormalizedLevel == state.level;
+    if (sameClass && sameLevel) return;
+
+    _lastNormalizedClass = state.characterClass;
+    _lastNormalizedLevel = state.level;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _normalizeUsedSpellSlots(state);
     });
   }
 
@@ -297,11 +319,7 @@ class _SpellsScreenState extends State<SpellsScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _normalizeUsedSpellSlots(context.read<AppState>());
-      }
-    });
+    _scheduleNormalizationIfNeeded(context.read<AppState>());
   }
 
   @override
@@ -492,76 +510,63 @@ class _SpellsScreenState extends State<SpellsScreen>
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _normalizeUsedSpellSlots(state);
-      }
-    });
+    _scheduleNormalizationIfNeeded(state);
 
     if (!_isSpellcaster) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(tr(context, 'abilities')),
-          centerTitle: true,
-          actions: settingsAction(context),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Colors.grey.shade400,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '${state.characterClass} не використовує магію, але може мати бойові вміння, крики, пози або техніки.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade400,
-                          ),
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${state.characterClass} не використовує магію, але може мати бойові вміння, крики, пози або техніки.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildSpellList(state, state.preparedSpells, 'Вміння', true),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            _buildSpellList(state, state.preparedSpells, 'Вміння', true),
+          ],
         ),
       );
     }
 
     final slots = _getSlotsForClass(state.characterClass, state.level);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(tr(context, 'spells')),
-        centerTitle: true,
-        actions: settingsAction(context),
-        bottom: TabBar(
+    return Column(
+      children: [
+        TabBar(
           controller: _tabController,
           tabs: const [
             Tab(text: 'Слоти та підготовлені'),
             Tab(text: 'Відомі'),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [_buildPreparedTab(state, slots), _buildKnownTab(state)],
-      ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [_buildPreparedTab(state, slots), _buildKnownTab(state)],
+          ),
+        ),
+      ],
     );
   }
 
@@ -645,7 +650,7 @@ class _SpellsScreenState extends State<SpellsScreen>
                       'Завантаж базові заклинання для ${state.characterClass}',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade400,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -743,14 +748,10 @@ class _SpellsScreenState extends State<SpellsScreen>
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: isUsed
-                                          ? Colors.grey.shade800
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
+                                          ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12)
+                                          : Theme.of(context).colorScheme.primary,
                                       border: Border.all(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
+                                        color: Theme.of(context).colorScheme.primary,
                                         width: 1.5,
                                       ),
                                     ),
@@ -761,8 +762,8 @@ class _SpellsScreenState extends State<SpellsScreen>
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                           color: isUsed
-                                              ? Colors.grey
-                                              : Colors.white,
+                                              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)
+                                              : Theme.of(context).colorScheme.onPrimary,
                                         ),
                                       ),
                                     ),
@@ -775,7 +776,7 @@ class _SpellsScreenState extends State<SpellsScreen>
                             '$available/$total',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade400,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                             ),
                           ),
                         ],
@@ -815,7 +816,7 @@ class _SpellsScreenState extends State<SpellsScreen>
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+          style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
         ),
         const SizedBox(height: 4),
         Text(
@@ -851,7 +852,7 @@ class _SpellsScreenState extends State<SpellsScreen>
             ),
             Text(
               '${spells.length} заклинань',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+              style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
             ),
           ],
         ),
@@ -933,7 +934,7 @@ class _SpellsScreenState extends State<SpellsScreen>
             ? null
             : Text(
                 subtitleParts.join(' · '),
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
               ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -977,7 +978,7 @@ class _SpellsScreenState extends State<SpellsScreen>
         margin: const EdgeInsets.only(right: 4),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color, width: 0.5),
         ),

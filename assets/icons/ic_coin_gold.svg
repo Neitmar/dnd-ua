@@ -1,0 +1,17 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hourglass shape -->
+  <path d="M18 12 L82 12 L58 50 L82 88 L18 88 L42 50 Z" fill="#FFD700" stroke="#8B6914" stroke-width="2.5"/>
+  <!-- Top & bottom bars -->
+  <rect x="18" y="10" width="64" height="8" rx="2" fill="#CC9900"/>
+  <rect x="18" y="82" width="64" height="8" rx="2" fill="#CC9900"/>
+  <!-- Lion mane -->
+  <circle cx="50" cy="50" r="17" fill="#CC8800"/>
+  <!-- Lion face -->
+  <circle cx="50" cy="50" r="12" fill="#FFAA00"/>
+  <!-- Eyes -->
+  <circle cx="45" cy="47" r="3" fill="#3A2000"/>
+  <circle cx="55" cy="47" r="3" fill="#3A2000"/>
+  <!-- Nose + mouth -->
+  <ellipse cx="50" cy="53" rx="2" ry="1.5" fill="#3A2000"/>
+  <path d="M46 56 Q50 60 54 56" stroke="#3A2000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,8 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Copper triangle -->
+  <polygon points="50,10 88,83 12,83" fill="#B87333" stroke="#5A3010" stroke-width="2.5"/>
+  <!-- Three finger bars -->
+  <rect x="36" y="50" width="8" height="24" rx="4" fill="#5A3010" opacity="0.85"/>
+  <rect x="46" y="42" width="8" height="32" rx="4" fill="#5A3010" opacity="0.85"/>
+  <rect x="56" y="50" width="8" height="24" rx="4" fill="#5A3010" opacity="0.85"/>
+</svg>

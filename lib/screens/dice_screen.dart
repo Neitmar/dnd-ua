@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-import '../services/localization_service.dart';
-import '../widgets/settings_dialog.dart';
+import '../utils/theme_danger.dart';
 
 class DiceScreen extends StatefulWidget {
   const DiceScreen({super.key});
@@ -60,29 +59,28 @@ class _DiceScreenState extends State<DiceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(tr(context, 'dice')),
-        centerTitle: true,
-        actions: [
-          if (_history.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: 'Очистити історію',
-              onPressed: () => setState(() => _history.clear()),
+    return Column(
+      children: [
+        _buildDicePanel(),
+        _buildModifierRow(),
+        _buildAdvantageRow(),
+        if (_history.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  icon: const Icon(Icons.delete_outline, size: 15),
+                  label: const Text('Очистити', style: TextStyle(fontSize: 12)),
+                  onPressed: () => setState(() => _history.clear()),
+                ),
+              ],
             ),
-          ...settingsAction(context),
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildDicePanel(),
-          _buildModifierRow(),
-          _buildAdvantageRow(),
-          const Divider(height: 1),
-          Expanded(child: _buildHistory()),
-        ],
-      ),
+          ),
+        const Divider(height: 1),
+        Expanded(child: _buildHistory()),
+      ],
     );
   }
 
@@ -201,9 +199,10 @@ class _DiceScreenState extends State<DiceScreen> {
         final isCrit = item['isCrit'] as bool;
         final isFail = item['isFail'] as bool;
 
+        final isLight = Theme.of(context).brightness == Brightness.light;
         Color? tileColor;
-        if (isCrit) tileColor = Colors.green.shade900;
-        if (isFail) tileColor = Colors.red.shade900;
+        if (isCrit) tileColor = isLight ? Colors.green.shade100 : Colors.green.shade900;
+        if (isFail) tileColor = isLight ? Colors.red.shade100 : Colors.red.shade900;
 
         return Card(
           color: tileColor,
@@ -214,7 +213,7 @@ class _DiceScreenState extends State<DiceScreen> {
               backgroundColor: isCrit
                   ? Colors.green
                   : isFail
-                  ? Colors.red
+                  ? dangerColor(context)
                   : Theme.of(context).colorScheme.primaryContainer,
               child: Text(
                 item['label'],
@@ -242,7 +241,7 @@ class _DiceScreenState extends State<DiceScreen> {
                   const SizedBox(width: 6),
                   Text(
                     '(${item['result']}${item['modifier']})',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                   ),
                 ],
                 if (isCrit)
@@ -257,14 +256,11 @@ class _DiceScreenState extends State<DiceScreen> {
                     ),
                   ),
                 if (isFail)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
                     child: Text(
                       'ПРОВАЛ',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: dangerStyle(context, const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
               ],
@@ -272,7 +268,7 @@ class _DiceScreenState extends State<DiceScreen> {
             subtitle: item['detail'].isNotEmpty
                 ? Text(
                     item['detail'],
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                   )
                 : null,
           ),

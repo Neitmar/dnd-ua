@@ -2,11 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../constants/app_assets.dart';
 import '../providers/app_state.dart';
-import '../services/localization_service.dart';
-import '../widgets/settings_dialog.dart';
 
 enum ItemCategory { potion, armor, weapon, useful, quest, accessory }
 
@@ -62,21 +61,63 @@ extension ItemCategoryExtension on ItemCategory {
     }
   }
 
-  String get imagePath {
-    switch (this) {
-      case ItemCategory.potion:
-        return AppAssets.invPotion;
-      case ItemCategory.armor:
-        return AppAssets.invArmor;
+}
+
+// Flutter-аналог React CategoryGlyph — inline SVG-гліфи, як у screens-v2.jsx
+class CategoryGlyph extends StatelessWidget {
+  final ItemCategory category;
+  final double size;
+  final Color color;
+
+  const CategoryGlyph({
+    super.key,
+    required this.category,
+    this.size = 14,
+    required this.color,
+  });
+
+  String _hexColor(Color c) {
+    final r = (c.r * 255.0).round().clamp(0, 255);
+    final g = (c.g * 255.0).round().clamp(0, 255);
+    final b = (c.b * 255.0).round().clamp(0, 255);
+    return '#${r.toRadixString(16).padLeft(2, '0')}'
+        '${g.toRadixString(16).padLeft(2, '0')}'
+        '${b.toRadixString(16).padLeft(2, '0')}';
+  }
+
+  String _paths() {
+    switch (category) {
       case ItemCategory.weapon:
-        return AppAssets.invWeapon;
-      case ItemCategory.useful:
-        return AppAssets.invUseful;
-      case ItemCategory.quest:
-        return AppAssets.invQuest;
+        return '<path d="M14.5 3.5l6 6-9 9-6-6 9-9z"/>'
+            '<path d="M3 21l4-4M5 19l-2 2"/>';
+      case ItemCategory.armor:
+        return '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>';
       case ItemCategory.accessory:
-        return AppAssets.invAccessories;
+        return '<circle cx="12" cy="14" r="6"/>'
+            '<path d="M9 8l3-4 3 4"/>';
+      case ItemCategory.potion:
+        return '<path d="M9 3h6v3l2 4v8a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3v-8l2-4z"/>'
+            '<path d="M9 13h6"/>';
+      case ItemCategory.useful:
+        return '<path d="M4 7h16v13H4z"/>'
+            '<path d="M4 7l2-3h12l2 3"/>'
+            '<path d="M9 11h6"/>';
+      case ItemCategory.quest:
+        return '<path d="M5 3h12c1 0 2 1 2 2v14c0 1-1 2-2 2H5"/>'
+            '<path d="M5 3a2 2 0 0 0-2 2 2 2 0 0 0 2 2h2v-4z"/>'
+            '<path d="M9 9h7M9 13h7M9 17h5"/>';
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stroke = _hexColor(color);
+    final svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" '
+        'fill="none" stroke="$stroke" stroke-width="1.6" '
+        'stroke-linecap="round" stroke-linejoin="round">'
+        '${_paths()}'
+        '</svg>';
+    return SvgPicture.string(svg, width: size, height: size);
   }
 }
 
@@ -407,31 +448,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final state = context.watch<AppState>();
     final totalWeight = _totalWeight(state);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(tr(context, 'inventory')),
-        centerTitle: true,
-        actions: settingsAction(context),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showItemDialog(),
-        child: const Icon(Icons.add),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildWallet(state),
-            const SizedBox(height: 16),
-            _buildWeightBar(totalWeight),
-            const SizedBox(height: 16),
-            _buildCategoryFilter(state),
-            const SizedBox(height: 12),
-            _buildItemsList(state),
-          ],
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildWallet(state),
+              const SizedBox(height: 16),
+              _buildWeightBar(totalWeight),
+              const SizedBox(height: 16),
+              _buildCategoryFilter(state),
+              const SizedBox(height: 12),
+              _buildItemsList(state),
+            ],
+          ),
         ),
-      ),
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: FloatingActionButton(
+            onPressed: () => _showItemDialog(),
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ],
     );
   }
 
@@ -454,36 +496,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
             const SizedBox(height: 16),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildCoin(
-                  'МД',
-                  state.copper,
-                  Colors.brown.shade400,
-                  (v) => state.update(() => state.copper = v),
-                  AppAssets.coinCopper,
-                ),
-                _buildCoin(
-                  'СД',
-                  state.silver,
-                  Colors.grey.shade400,
-                  (v) => state.update(() => state.silver = v),
-                  AppAssets.coinSilver,
-                ),
-                _buildCoin(
-                  'ЗД',
-                  state.gold,
-                  Colors.amber.shade400,
-                  (v) => state.update(() => state.gold = v),
-                  AppAssets.coinGold,
-                ),
-                _buildCoin(
-                  'ПД',
-                  state.platinum,
-                  Colors.cyan.shade300,
-                  (v) => state.update(() => state.platinum = v),
-                  AppAssets.coinPlatinum,
-                ),
+                Expanded(child: _buildCoin('МД', state.copper, const Color(0xFFB87333), (v) => state.update(() => state.copper = v), AppAssets.coinCopper)),
+                const SizedBox(width: 4),
+                Expanded(child: _buildCoin('СД', state.silver, const Color(0xFFC0C0C0), (v) => state.update(() => state.silver = v), AppAssets.coinSilver)),
+                const SizedBox(width: 4),
+                Expanded(child: _buildCoin('ЕД', state.electrum, const Color(0xFFE8E8AD), (v) => state.update(() => state.electrum = v), AppAssets.coinElectrum)),
+                const SizedBox(width: 4),
+                Expanded(child: _buildCoin('ЗД', state.gold, const Color(0xFFFFD700), (v) => state.update(() => state.gold = v), AppAssets.coinGold)),
+                const SizedBox(width: 4),
+                Expanded(child: _buildCoin('ПД', state.platinum, const Color(0xFFE5E4E2), (v) => state.update(() => state.platinum = v), AppAssets.coinPlatinum)),
               ],
             ),
           ],
@@ -499,44 +522,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
     Function(int) onChanged,
     String iconPath,
   ) {
-    final controller = TextEditingController(text: value.toString());
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Image.asset(
-          iconPath,
-          width: 40,
-          height: 40,
-          errorBuilder: (_, _, _) => CircleAvatar(
-            backgroundColor: color,
-            radius: 20,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
+        Center(child: SvgPicture.asset(iconPath, width: 36, height: 36)),
+        const SizedBox(height: 6),
+        TextFormField(
+          key: ValueKey('${label}_$value'),
+          initialValue: value.toString(),
+          textAlign: TextAlign.center,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(7),
+          ],
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: 64,
-          child: TextField(
-            controller: controller,
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(7),
-            ],
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            ),
-            onChanged: (v) => onChanged(int.tryParse(v) ?? 0),
-          ),
+          onChanged: (v) => onChanged(int.tryParse(v) ?? 0),
         ),
       ],
     );
@@ -563,7 +568,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   '${totalWeight.toStringAsFixed(1)} / $maxWeight кг',
                   style: TextStyle(
                     fontSize: 14,
-                    color: isOverloaded ? Colors.red : Colors.grey,
+                    color: isOverloaded ? Colors.red : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
                     fontWeight: isOverloaded ? FontWeight.bold : null,
                   ),
                 ),
@@ -575,7 +580,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               child: LinearProgressIndicator(
                 value: ratio,
                 minHeight: 10,
-                backgroundColor: Colors.grey.shade800,
+                backgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   isOverloaded ? Colors.red : Colors.green,
                 ),
@@ -605,12 +610,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ..._orderedCategories.map(
             (cat) => Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: _buildFilterChip(
-                cat,
-                cat.label,
-                cat.icon,
-                color: cat.color,
-              ),
+              child: _buildFilterChip(cat, cat.label, cat.icon, color: cat.color),
             ),
           ),
         ],
@@ -624,20 +624,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
     IconData icon, {
     Color? color,
     VoidCallback? onTap,
-    String? imagePath,
   }) {
     final isSelected = _selectedCategory == cat;
     final chipColor = color ?? Colors.grey;
     final iconColor = isSelected ? chipColor : Colors.grey;
-    final leadingIcon = imagePath != null
-        ? Image.asset(
-            imagePath,
-            width: 16,
-            height: 16,
-            color: iconColor,
-            colorBlendMode: BlendMode.srcIn,
-            errorBuilder: (_, _, _) => Icon(icon, size: 14, color: iconColor),
-          )
+    final leadingIcon = cat != null
+        ? CategoryGlyph(category: cat, size: 14, color: iconColor)
         : Icon(icon, size: 14, color: iconColor);
     return GestureDetector(
       onTap:
@@ -655,7 +647,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         decoration: BoxDecoration(
           color: isSelected ? chipColor.withAlpha((0.2 * 255).round()) : Colors.transparent,
           border: Border.all(
-            color: isSelected ? chipColor : Colors.grey.shade700,
+            color: isSelected ? chipColor : Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
             width: isSelected ? 1.5 : 0.5,
           ),
           borderRadius: BorderRadius.circular(20),
@@ -669,7 +661,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: isSelected ? chipColor : Colors.grey,
+                color: isSelected ? chipColor : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -715,7 +707,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
             Text(
               '${items.length} шт.',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+              style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75)),
             ),
           ],
         ),
@@ -727,7 +719,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               child: Text(
                 'Тут порожньо\nНатисни + щоб додати предмет',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 15),
               ),
             ),
           )
@@ -752,11 +744,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     child: CircleAvatar(
                       backgroundColor: isEquipped
                           ? cat.color.withAlpha((0.3 * 255).round())
-                          : Colors.grey.shade800,
+                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
                       child: Icon(
                         cat.icon,
                         size: 18,
-                        color: isEquipped ? cat.color : Colors.grey,
+                        color: isEquipped ? cat.color : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                     ),
                   ),
@@ -795,7 +787,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         Text(
                           item['description'],
                           style: TextStyle(
-                            color: Colors.grey.shade400,
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
                             fontSize: 12,
                           ),
                         ),

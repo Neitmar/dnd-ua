@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
+import '../constants/design_tokens.dart';
 import '../data/classes_data.dart';
 import '../data/items_data.dart';
-import '../services/localization_service.dart';
-import '../widgets/settings_dialog.dart';
 
 class CharacterScreen extends StatefulWidget {
   const CharacterScreen({super.key});
@@ -272,57 +272,60 @@ class _CharacterScreenState extends State<CharacterScreen> {
     final state = context.watch<AppState>();
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(tr(context, 'character')),
-          centerTitle: true,
-          actions: settingsAction(context),
-          bottom: const TabBar(
+      child: Column(
+        children: [
+          const TabBar(
             tabs: [
               Tab(text: 'Основне'),
               Tab(text: 'Статистика'),
               Tab(text: 'Навички'),
             ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildPortraitPlaceholder(),
-                  const SizedBox(height: 16),
-                  _buildBasicInfo(state),
-                ],
-              ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPortraitPlaceholder(),
+                      const SizedBox(height: 16),
+                      _buildBasicInfo(state),
+                    ],
+                  ),
+                ),
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [_buildStatsGrid(state)],
+                  ),
+                ),
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSavingThrows(state),
+                      const SizedBox(height: 16),
+                      _buildSkills(state),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [_buildStatsGrid(state)],
-              ),
-            ),
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSavingThrows(state),
-                  const SizedBox(height: 16),
-                  _buildSkills(state),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBasicInfo(AppState state) {
+    final selectedClass =
+        _classes.contains(state.characterClass) ? state.characterClass : null;
+    final selectedRace = _races.contains(state.race) ? state.race : null;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -336,6 +339,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: _nameController,
+              style: GoogleFonts.underdog(),
               decoration: InputDecoration(
                 labelText: "Ім'я персонажа",
                 border: const OutlineInputBorder(),
@@ -368,7 +372,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              initialValue: state.characterClass,
+              initialValue: selectedClass,
               decoration: const InputDecoration(
                 labelText: 'Клас',
                 border: OutlineInputBorder(),
@@ -398,7 +402,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              initialValue: state.race,
+              initialValue: selectedRace,
               decoration: const InputDecoration(
                 labelText: 'Раса',
                 border: OutlineInputBorder(),
@@ -407,7 +411,10 @@ class _CharacterScreenState extends State<CharacterScreen> {
               items: _races
                   .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                   .toList(),
-              onChanged: (v) => state.update(() => state.race = v!),
+              onChanged: (v) {
+                if (v == null) return;
+                state.update(() => state.race = v);
+              },
             ),
             const SizedBox(height: 12),
             Row(
@@ -467,14 +474,14 @@ class _CharacterScreenState extends State<CharacterScreen> {
               height: 144,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade700),
-                color: Colors.black.withValues(alpha: 0.18),
+                border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
               ),
               padding: const EdgeInsets.all(16),
               child: SvgPicture.asset(
                 'assets/character_silhouette.svg',
                 colorFilter: ColorFilter.mode(
-                  Colors.grey.shade500,
+                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                   BlendMode.srcIn,
                 ),
               ),
@@ -512,6 +519,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
   }
 
   Widget _buildStatCard(AppState state, String name, int value) {
+    final shadows = DesignTokens.getTextShadow(Theme.of(context).brightness);
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -520,13 +528,13 @@ class _CharacterScreenState extends State<CharacterScreen> {
           children: [
             Text(
               name,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, shadows: shadows),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
               _modifierString(value),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, shadows: shadows),
             ),
             const SizedBox(height: 2),
             Row(
@@ -539,7 +547,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       : null,
                 ),
                 const SizedBox(width: 6),
-                Text('$value', style: const TextStyle(fontSize: 16)),
+                Text('$value', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, shadows: shadows)),
                 const SizedBox(width: 6),
                 _holdButton(
                   icon: Icons.add,
@@ -713,7 +721,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
                         abilityName.substring(0, 3).toUpperCase(),
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey.shade500,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                       ),
                     ],
