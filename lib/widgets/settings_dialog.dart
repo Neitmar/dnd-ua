@@ -13,10 +13,19 @@ void showSettingsDialog(BuildContext context) {
 
 List<Widget> settingsAction(BuildContext context) {
   return [
-    IconButton(
-      icon: const Icon(Icons.settings),
-      tooltip: tr(context, 'settings'),
-      onPressed: () => showSettingsDialog(context),
+    GestureDetector(
+      onLongPress: () {
+        final state = context.read<AppState>();
+        state.update(state.fillTestInventory);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Тестовий інвентар заповнено')),
+        );
+      },
+      child: IconButton(
+        icon: const Icon(Icons.settings),
+        tooltip: tr(context, 'settings'),
+        onPressed: () => showSettingsDialog(context),
+      ),
     ),
   ];
 }

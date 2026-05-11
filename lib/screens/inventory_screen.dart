@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -110,8 +108,7 @@ class InventoryScreen extends StatefulWidget {
 class _InventoryScreenState extends State<InventoryScreen> {
   ItemCategory? _selectedCategory;
   ItemCategory? _lastSelectedCategory;
-  Timer? _allPressTimer;
-  bool _allPressTriggered = false;
+  final ScrollController _filterController = ScrollController();
 
   static const List<ItemCategory> _orderedCategories = [
     ItemCategory.armor,
@@ -174,31 +171,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
       return ItemCategory.useful;
     }
     return ItemCategory.values[index];
-  }
-
-  void _startAllPressTimer(AppState state) {
-    _allPressTriggered = false;
-    _allPressTimer?.cancel();
-    _allPressTimer = Timer(const Duration(seconds: 5), () {
-      _allPressTriggered = true;
-      state.update(state.fillTestInventory);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Тестовий інвентар заповнено')),
-      );
-    });
-  }
-
-  void _stopAllPressTimer({bool activateTap = true}) {
-    _allPressTimer?.cancel();
-    if (_allPressTriggered) {
-      _allPressTriggered = false;
-      return;
-    }
-    if (activateTap) {
-      setState(() {
-        _selectedCategory = null;
-      });
-    }
   }
 
   List<Map<String, dynamic>> get _filteredItems {
@@ -458,7 +430,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   void dispose() {
-    _allPressTimer?.cancel();
+    _filterController.dispose();
     super.dispose();
   }
 
@@ -582,18 +554,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Widget _buildCategoryFilter(AppState state) {
     return SizedBox(
       height: 44,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.zero,
-        children: [
-          _buildAllFilterChip(state),
-          ..._orderedCategories.map(
-            (cat) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _buildFilterChip(cat, cat.label, cat.icon, color: cat.color),
+      child: GestureDetector(
+        // Ручний drag — єдиний надійний спосіб скролу коли чіпи мають GestureDetector
+        onHorizontalDragUpdate: (details) {
+          if (_filterController.hasClients) {
+            _filterController.jumpTo(
+              (_filterController.offset - details.delta.dx)
+                  .clamp(0.0, _filterController.position.maxScrollExtent),
+            );
+          }
+        },
+        child: ListView(
+          controller: _filterController,
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.zero,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _buildAllFilterChip(),
+            ..._orderedCategories.map(
+              (cat) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _buildFilterChip(cat, cat.label, cat.icon, color: cat.color),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -646,27 +631,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  Widget _buildAllFilterChip(AppState state) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTapDown: (_) => _startAllPressTimer(state),
-      onTapUp: (_) => _stopAllPressTimer(activateTap: !_allPressTriggered),
-      onTapCancel: () => _stopAllPressTimer(activateTap: false),
-      // Скасовуємо таймер якщо користувач почав горизонтальний скрол
-      onHorizontalDragStart: (_) => _stopAllPressTimer(activateTap: false),
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: _buildFilterChip(
-          null,
-          'Всі',
-          Icons.apps,
-          color: Colors.grey,
-          onTap: () {
-            setState(() {
-              _selectedCategory = null;
-            });
-          },
-        ),
+  Widget _buildAllFilterChip() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: _buildFilterChip(
+        null,
+        'Всі',
+        Icons.apps,
+        color: Colors.grey,
+        onTap: () => setState(() => _selectedCategory = null),
       ),
     );
   }
