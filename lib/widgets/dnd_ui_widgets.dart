@@ -10,8 +10,10 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_assets.dart';
 import '../constants/design_tokens.dart';
+import '../providers/app_state.dart';
 import 'settings_dialog.dart';
 
 // ───────────────────────────────────────────────────────────────────
@@ -232,17 +234,27 @@ class DndAppBar extends StatelessWidget implements PreferredSizeWidget {
                 _WingIcon(path: wingPath),
               ],
             ),
-            // Права кнопка — шестерня налаштувань
+            // Права кнопка — шестерня налаштувань (long press = тестовий інвентар)
             Positioned(
               right: 4,
-              child: IconButton(
-                icon: Icon(
-                  Icons.settings,
-                  color: isDark ? DesignTokens.darkAccent : DesignTokens.lightAccent,
-                  size: 22,
+              child: InkWell(
+                onTap: () => showSettingsDialog(context),
+                onLongPress: () {
+                  final state = context.read<AppState>();
+                  state.update(state.fillTestInventory);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Тестовий інвентар заповнено')),
+                  );
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.settings,
+                    color: isDark ? DesignTokens.darkAccent : DesignTokens.lightAccent,
+                    size: 22,
+                  ),
                 ),
-                tooltip: 'Налаштування',
-                onPressed: () => showSettingsDialog(context),
               ),
             ),
           ],
