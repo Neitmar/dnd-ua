@@ -1,11 +1,11 @@
 {
-    "name": "dnd_ua",
-    "short_name": "dnd_ua",
+    "name": "ДнД - Компаньон",
+    "short_name": "ДнД",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#1A0A00",
+    "theme_color": "#1A0A00",
+    "description": "Мобільний помічник для Dungeons & Dragons 5e",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

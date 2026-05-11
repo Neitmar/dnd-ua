@@ -252,7 +252,7 @@ class _DndAppState extends State<DndApp> {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     return MaterialApp(
-      title: 'ДнД Українською',
+      title: 'ДнД - Компаньон',
       debugShowCheckedModeBanner: false,
       theme: appState.isLightTheme
           ? _buildLightTheme(appState.languageCode)

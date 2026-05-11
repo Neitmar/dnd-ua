@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/app_assets.dart';
 import '../providers/app_state.dart';
 import '../services/localization_service.dart';
 
@@ -109,6 +110,10 @@ class SettingsDialog extends StatelessWidget {
               title: Text(tr(context, 'shareLink')),
               onTap: () => _showSoon(context),
             ),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 4),
+            Center(child: _DonatButton()),
           ],
         ),
       ),
@@ -116,6 +121,37 @@ class SettingsDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(tr(context, 'close')),
+        ),
+      ],
+    );
+  }
+}
+
+class _DonatButton extends StatefulWidget {
+  @override
+  State<_DonatButton> createState() => _DonatButtonState();
+}
+
+class _DonatButtonState extends State<_DonatButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTapCancel: () => setState(() => _pressed = false),
+          child: Image.asset(
+            _pressed ? AppAssets.donatButtonActive : AppAssets.donatButton,
+            height: 56,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          tr(context, 'donateButton'),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     );

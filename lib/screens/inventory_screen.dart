@@ -27,6 +27,21 @@ extension ItemCategoryExtension on ItemCategory {
     }
   }
 
+  /// PNG-шлях залежно від теми: isLightTheme=true → темні іконки на світлому фоні
+  String iconPath(bool isLightTheme) {
+    final prefix = isLightTheme
+        ? 'assets/icons/dark-theme-'
+        : 'assets/icons/light-theme-';
+    switch (this) {
+      case ItemCategory.potion:    return '${prefix}potions.png';
+      case ItemCategory.armor:     return '${prefix}armors.png';
+      case ItemCategory.weapon:    return '${prefix}weapons.png';
+      case ItemCategory.useful:    return '${prefix}useful.png';
+      case ItemCategory.quest:     return '${prefix}quest.png';
+      case ItemCategory.accessory: return '${prefix}accessories.png';
+    }
+  }
+
   IconData get icon {
     switch (this) {
       case ItemCategory.potion:
@@ -63,61 +78,25 @@ extension ItemCategoryExtension on ItemCategory {
 
 }
 
-// Flutter-аналог React CategoryGlyph — inline SVG-гліфи, як у screens-v2.jsx
-class CategoryGlyph extends StatelessWidget {
+/// PNG-іконка категорії інвентаря, що автоматично обирає варіант для поточної теми.
+class CategoryIcon extends StatelessWidget {
   final ItemCategory category;
   final double size;
-  final Color color;
 
-  const CategoryGlyph({
+  const CategoryIcon({
     super.key,
     required this.category,
     this.size = 14,
-    required this.color,
   });
-
-  String _hexColor(Color c) {
-    final r = (c.r * 255.0).round().clamp(0, 255);
-    final g = (c.g * 255.0).round().clamp(0, 255);
-    final b = (c.b * 255.0).round().clamp(0, 255);
-    return '#${r.toRadixString(16).padLeft(2, '0')}'
-        '${g.toRadixString(16).padLeft(2, '0')}'
-        '${b.toRadixString(16).padLeft(2, '0')}';
-  }
-
-  String _paths() {
-    switch (category) {
-      case ItemCategory.weapon:
-        return '<path d="M14.5 3.5l6 6-9 9-6-6 9-9z"/>'
-            '<path d="M3 21l4-4M5 19l-2 2"/>';
-      case ItemCategory.armor:
-        return '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>';
-      case ItemCategory.accessory:
-        return '<circle cx="12" cy="14" r="6"/>'
-            '<path d="M9 8l3-4 3 4"/>';
-      case ItemCategory.potion:
-        return '<path d="M9 3h6v3l2 4v8a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3v-8l2-4z"/>'
-            '<path d="M9 13h6"/>';
-      case ItemCategory.useful:
-        return '<path d="M4 7h16v13H4z"/>'
-            '<path d="M4 7l2-3h12l2 3"/>'
-            '<path d="M9 11h6"/>';
-      case ItemCategory.quest:
-        return '<path d="M5 3h12c1 0 2 1 2 2v14c0 1-1 2-2 2H5"/>'
-            '<path d="M5 3a2 2 0 0 0-2 2 2 2 0 0 0 2 2h2v-4z"/>'
-            '<path d="M9 9h7M9 13h7M9 17h5"/>';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final stroke = _hexColor(color);
-    final svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" '
-        'fill="none" stroke="$stroke" stroke-width="1.6" '
-        'stroke-linecap="round" stroke-linejoin="round">'
-        '${_paths()}'
-        '</svg>';
-    return SvgPicture.string(svg, width: size, height: size);
+    final isLight = context.watch<AppState>().isLightTheme;
+    return Image.asset(
+      category.iconPath(isLight),
+      width: size,
+      height: size,
+    );
   }
 }
 
@@ -627,10 +606,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }) {
     final isSelected = _selectedCategory == cat;
     final chipColor = color ?? Colors.grey;
-    final iconColor = isSelected ? chipColor : Colors.grey;
+    final isLight = context.read<AppState>().isLightTheme;
     final leadingIcon = cat != null
-        ? CategoryGlyph(category: cat, size: 14, color: iconColor)
-        : Icon(icon, size: 14, color: iconColor);
+        ? CategoryIcon(category: cat, size: 14)
+        : Image.asset(AppAssets.invIconAll(isLight), width: 14, height: 14);
     return GestureDetector(
       onTap:
           onTap ??

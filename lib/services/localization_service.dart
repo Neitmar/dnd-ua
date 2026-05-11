@@ -5,6 +5,8 @@ import '../providers/app_state.dart';
 
 const Map<String, Map<String, String>> _strings = {
   'uk': {
+    'appName': 'ДнД - Компаньон',
+    'donateButton': 'Донатик на вкусняшку',
     'settings': 'Налаштування',
     'language': 'Мова',
     'english': 'Англійська',
@@ -34,6 +36,8 @@ const Map<String, Map<String, String>> _strings = {
     'theme_description': 'Кофейна світла або пергаментна темна палітра',
   },
   'ru': {
+    'appName': 'ДнД - Компаньон',
+    'donateButton': 'Донатик на вкусняшку',
     'settings': 'Настройки',
     'language': 'Язык',
     'english': 'Английский',
@@ -63,6 +67,8 @@ const Map<String, Map<String, String>> _strings = {
     'theme_description': 'Кофейная светлая или пергаментная тёмная палитра',
   },
   'en': {
+    'appName': 'DnD - Companion',
+    'donateButton': 'Buy me a snack',
     'settings': 'Settings',
     'language': 'Language',
     'english': 'English',
