@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -143,9 +145,52 @@ class _DonatButtonState extends State<_DonatButton> {
           onTapDown: (_) => setState(() => _pressed = true),
           onTapUp: (_) => setState(() => _pressed = false),
           onTapCancel: () => setState(() => _pressed = false),
-          child: Image.asset(
-            _pressed ? AppAssets.donatButtonActive : AppAssets.donatButton,
-            height: 56,
+          // Padding резервує місце для свічення — розмір НЕ змінюється при натисканні
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            child: SizedBox(
+              height: 56,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  if (_pressed) ...[
+                    // Коричневий широкий шар — видно на світлій темі
+                    Positioned(
+                      top: -14, bottom: -14, left: -8, right: -8,
+                      child: ImageFiltered(
+                        imageFilter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                        child: ColorFiltered(
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFF7B3A10),
+                            BlendMode.srcIn,
+                          ),
+                          child: Image.asset(AppAssets.donatButtonActive, fit: BoxFit.contain),
+                        ),
+                      ),
+                    ),
+                    // Золотий гостріший шар
+                    Positioned(
+                      top: -10, bottom: -10, left: -4, right: -4,
+                      child: ImageFiltered(
+                        imageFilter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: ColorFiltered(
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFFFBD675),
+                            BlendMode.srcIn,
+                          ),
+                          child: Image.asset(AppAssets.donatButtonActive, fit: BoxFit.contain),
+                        ),
+                      ),
+                    ),
+                  ],
+                  Image.asset(
+                    _pressed ? AppAssets.donatButtonActive : AppAssets.donatButton,
+                    height: 56,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 6),

@@ -279,7 +279,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(cat.icon, size: 14, color: cat.color),
+                            CategoryIcon(category: cat, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               cat.label,
@@ -580,12 +580,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Widget _buildCategoryFilter(AppState state) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
         children: [
           _buildAllFilterChip(state),
-          const SizedBox(width: 8),
           ..._orderedCategories.map(
             (cat) => Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -624,11 +625,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? chipColor.withAlpha((0.2 * 255).round()) : Colors.transparent,
-          border: Border.all(
-            color: isSelected ? chipColor : Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
-            width: isSelected ? 1.5 : 0.5,
-          ),
+          color: isSelected ? chipColor.withAlpha((0.18 * 255).round()) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -651,10 +648,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Widget _buildAllFilterChip(AppState state) {
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.translucent,
       onTapDown: (_) => _startAllPressTimer(state),
       onTapUp: (_) => _stopAllPressTimer(activateTap: !_allPressTriggered),
       onTapCancel: () => _stopAllPressTimer(activateTap: false),
+      // Скасовуємо таймер якщо користувач почав горизонтальний скрол
+      onHorizontalDragStart: (_) => _stopAllPressTimer(activateTap: false),
       child: Padding(
         padding: const EdgeInsets.only(right: 8),
         child: _buildFilterChip(
